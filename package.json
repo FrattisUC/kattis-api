@@ -1,0 +1,11 @@
+{
+  "name": "kattis",
+  "version": "1.0.0",
+  "description": "Stateful API designed to connect verifyproblem with kattis-cli",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "",
+  "license": "ISC"
+}
