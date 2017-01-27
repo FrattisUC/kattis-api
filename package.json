@@ -1,0 +1,14 @@
+{
+  "name": "kattis-api",
+  "version": "1.0.0",
+  "description": "API designed to be MW between CLI and Problemtools",
+  "main": "index.js",
+  "repository": "https://github.com/IIC1103-Kattis/kattis-api.git",
+  "author": "Francesca Lucchini",
+  "license": "MIT",
+  "dependencies": {
+    "connect-busboy": "^0.0.2",
+    "express": "^4.14.0",
+    "fs": "^0.0.1-security"
+  }
+}
