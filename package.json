@@ -7,8 +7,10 @@
   "author": "Francesca Lucchini",
   "license": "MIT",
   "dependencies": {
+    "body-parser": "^1.16.0",
     "connect-busboy": "^0.0.2",
     "express": "^4.14.0",
-    "fs": "^0.0.1-security"
+    "fs": "^0.0.1-security",
+    "shortid": "^2.2.6"
   }
 }
