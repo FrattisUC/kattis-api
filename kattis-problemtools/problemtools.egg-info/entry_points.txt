@@ -1,0 +1,5 @@
+[console_scripts]
+problem2html = problemtools.problem2html:main
+problem2pdf = problemtools.problem2pdf:main
+verifyproblem = problemtools.verifyproblem:main
+

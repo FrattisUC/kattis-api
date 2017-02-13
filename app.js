@@ -7,14 +7,16 @@ var shortid = require('shortid');
 var app = express()
 var port =  process.env.HOST || "3000";
 
-var prefixDir = '../../kattis-problemtools/problemtools/';
+var prefixDir = 'kattis-problemtools/problemtools/';
 var suffixDir = '/submissions/accepted/';
+var verificationScript = 'verifyproblem.py'
+var results = [];
 
 app.use(busboy());
 app.use(bodyParser());
 
 app.get('/', function (req, res) {
-  res.send('Hello World!')
+  res.send('Done!')
 })
 
 app.listen(port, function () {
@@ -24,13 +26,15 @@ app.listen(port, function () {
 /* TODO: Make Login submission
 */
 app.post('/login', function(req, res) {
+  results = [];
   res.send('Logged in!')
 })
 
 /* TODO: Make logout
 */
 
-/* TODO: Make program submission
+/*
+* Make program submission
 */
 app.post('/submit', function(req, res) {
     var fstream ;
@@ -39,17 +43,50 @@ app.post('/submit', function(req, res) {
     req.busboy.on('file', function (fieldname, file, filename) {
         console.log("Uploading: " + filename);
 
-        /* TODO: get problem name and put submission in correct directory
-         */
         var name = shortid.generate();
-        console.log(prefixDir + problemName + suffixDir + name);
-        fstream = fs.createWriteStream(prefixDir + problemName + suffixDir + name + ".py");
+        var path = prefixDir + problemName + suffixDir
+        var problemDir = prefixDir + problemName;
+        console.log(path);
+
+        fstream = fs.createWriteStream(path + name + ".py");
         file.pipe(fstream);
+
         fstream.on('close', function () {
-            res.redirect('back');
+          run_program(path, name, problemDir, function ()
+          {
+            res.send(results);
+          });
         });
     });
+
+
 });
 
 /* TODO: Run python program
 */
+function run_program(path, script_name, problemName, callback)
+{
+    var PythonShell = require('python-shell');
+    var options = {
+    mode: 'text',
+    pythonPath: 'python',
+    pythonOptions: ['-u'],
+    scriptPath: prefixDir,
+    args: [problemName, '-s', script_name]
+    };
+
+    var pyshell = new PythonShell(verificationScript, options);
+
+
+    pyshell.on('message', function (message) {
+      // received a message sent from the Python script (a simple "print" statement)
+      console.log(message);
+      results.push(message);
+    });
+
+    pyshell.end(function (err) {
+      if (err) throw err;
+      callback();
+      console.log('finished');
+    });
+}

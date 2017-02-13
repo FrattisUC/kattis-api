@@ -11,6 +11,7 @@
     "connect-busboy": "^0.0.2",
     "express": "^4.14.0",
     "fs": "^0.0.1-security",
+    "python-shell": "^0.4.0",
     "shortid": "^2.2.6"
   }
 }

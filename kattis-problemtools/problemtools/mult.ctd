@@ -1,0 +1,4 @@
+INT(1, 40, num)
+WHILEI(i, i < num)
+  INT(0, 10^15) SPACE INT(0, 10^15) NEWLINE
+END
