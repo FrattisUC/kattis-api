@@ -4,7 +4,9 @@ Para usar la App, en la línea de comandos:
 /* Para correr la versión 1 */
 node app
 ```
+```
 /* Para correr la versión 2 */
+
 node appv2
 ```
 
@@ -12,18 +14,23 @@ node appv2
 
 Para añadir un nuevo problema al servidor:
 
-1) Ir a kattis-api/kattis-problemtools/problemtools
-2) Crear una carpeta con nombre <nombre_del_problema>. La estructura interna
-  incluye 5 carpetas y el archivo problem.yaml.
+1. Item 1
+1. Item 2
+1. Item 3
+   1. Item 3a
+   1. Item 3b
+
+1. Ir a kattis-api/kattis-problemtools/problemtools
+1. Crear una carpeta con nombre <nombre_del_problema>. La estructura interna incluye 5 carpetas y el archivo problem.yaml.
 
   Carpetas:
-  i) data
- ii) input_format_validators
-iii) output_validators
- iv) problem_statement
-  v)  submissions
+  1. data
+  1. input_format_validators
+  1. output_validators
+  1. problem_statement
+  1. submissions
 
-  i) data: contiene los tests que se van a probar en la carpeta sample y secret.
+  2. data: contiene los tests que se van a probar en la carpeta sample y secret.
   Sample se usa para guardar los test púlbicos y secret, para los privados.
   Cada test de nombre <test_name> debe tener dos archivos asociados:
     - <test_name>.in : archivo que guarda el imput que se le pasará al programa
@@ -31,17 +38,17 @@ iii) output_validators
     - <test_name>.ans : archivo que guarda el output contra el que se comparará
       el input, o sea, una respuesta válida.
 
- ii) input_format_validator: se usa para revisar que los archivos .in cumplan
+  2. input_format_validator: se usa para revisar que los archivos .in cumplan
   con los requerimientos.
 
- iii) output_format_validator: lo mismo, pero para output.
+  2. output_format_validator: lo mismo, pero para output.
 
- iv) problem_statement: guarda el archivo en latex del enunciado del problema
+  2. problem_statement: guarda el archivo en latex del enunciado del problema
  (no implementado correctamente aún)
 
- v) submissions: guarda los programas subidos por los alumnos.
+  2. submissions: guarda los programas subidos por los alumnos.
 
-3) Ejemplo de problem.yaml:
+1. Ejemplo de problem.yaml:
 
 ```
 # Override standard limits: say that the TLE solutions provided should
