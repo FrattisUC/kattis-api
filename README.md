@@ -23,26 +23,24 @@ Para añadir un nuevo problema al servidor:
   1. output_validators
   1. problem_statement
   1. submissions
+  
+  Detalles de cada elemento:  
+  1. data: contiene los tests que se van a probar en la carpeta sample y secret. Sample se usa para guardar los test púlbicos y secret, para los privados. Cada test de nombre <test_name> debe tener dos archivos asociados:
+    - <test_name>.in : archivo que guarda el imput que se le pasará al programa que se va a probar.
+    - <test_name>.ans : archivo que guarda el output contra el que se comparará el input, o sea, una respuesta válida.
 
-  2. data: contiene los tests que se van a probar en la carpeta sample y secret.
-  Sample se usa para guardar los test púlbicos y secret, para los privados.
-  Cada test de nombre <test_name> debe tener dos archivos asociados:
-    - <test_name>.in : archivo que guarda el imput que se le pasará al programa
-      que se va a probar.
-    - <test_name>.ans : archivo que guarda el output contra el que se comparará
-      el input, o sea, una respuesta válida.
+  2. input_format_validator: se usa para revisar que los archivos .in cumplan con los requerimientos.
 
-  2. input_format_validator: se usa para revisar que los archivos .in cumplan
-  con los requerimientos.
+  3. output_format_validator: lo mismo, pero para output.
 
-  2. output_format_validator: lo mismo, pero para output.
+  4. problem_statement: guarda el archivo en latex del enunciado del problema (no implementado correctamente aún)
 
-  2. problem_statement: guarda el archivo en latex del enunciado del problema
- (no implementado correctamente aún)
-
-  2. submissions: guarda los programas subidos por los alumnos.
+  5. submissions: guarda los programas subidos por los alumnos.
 
 1. Ejemplo de problem.yaml:
+  Valores relevantes:
+  1. name: <test_name>
+  1. validation: {custom, default}
 
 ```
 # Override standard limits: say that the TLE solutions provided should
