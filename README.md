@@ -14,12 +14,6 @@ node appv2
 
 Para añadir un nuevo problema al servidor:
 
-1. Item 1
-1. Item 2
-1. Item 3
-   1. Item 3a
-   1. Item 3b
-
 1. Ir a kattis-api/kattis-problemtools/problemtools
 1. Crear una carpeta con nombre <nombre_del_problema>. La estructura interna incluye 5 carpetas y el archivo problem.yaml.
 
