@@ -1,4 +1,4 @@
-Para usar la App, en la línea de comandos:
+# Para usar la App, en la línea de comandos:
 
 ```
 /* Para correr la versión 1 */
@@ -12,7 +12,7 @@ node appv2
 
 ---
 
-Para añadir un nuevo problema al servidor:
+# Para añadir un nuevo problema al servidor:
 
 1. Ir a kattis-api/kattis-problemtools/problemtools
 1. Crear una carpeta con nombre <nombre_del_problema>. La estructura interna incluye 5 carpetas y el archivo problem.yaml.
@@ -38,6 +38,7 @@ Para añadir un nuevo problema al servidor:
   5. submissions: guarda los programas subidos por los alumnos.
 
 1. Ejemplo de problem.yaml:
+
   Valores relevantes:
   1. name: <test_name>
   1. validation: {custom, default}
