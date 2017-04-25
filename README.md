@@ -1,11 +1,11 @@
 # Para usar la App, en la línea de comandos:
 
 ```
-/* Para correr la versión 1 */
+/* Para correr la versión 1, sin VClass */
 node app
 ```
 ```
-/* Para correr la versión 2 */
+/* Para correr la versión 2, con VClass (en construcción) */
 
 node appv2
 ```
@@ -25,7 +25,7 @@ node appv2
   1. submissions
   
   Detalles de cada elemento:  
-  1. data: contiene los tests que se van a probar en la carpeta sample y secret. Sample se usa para guardar los test púlbicos y secret, para los privados. Cada test de nombre <test_name> debe tener dos archivos asociados:
+  1. data: contiene los tests que se van a probar en la carpeta sample y secret. Sample se usa para guardar los test púlbicos y secret, para los privados. Cada test de nombre <test_name> debe tener dos archivos asociados que deben estar en la misma ruta (en sample o en secret):
     - <test_name>.in : archivo que guarda el imput que se le pasará al programa que se va a probar.
     - <test_name>.ans : archivo que guarda el output contra el que se comparará el input, o sea, una respuesta válida.
 
@@ -35,7 +35,7 @@ node appv2
 
   4. problem_statement: guarda el archivo en latex del enunciado del problema (no implementado correctamente aún)
 
-  5. submissions: guarda los programas subidos por los alumnos.
+  5. submissions: guarda los programas subidos por los alumnos. TODO: Hacer que se borren cada cierto tiempo y guardar submissions en la base de datos de VClass (Google Drive).
 
 1. Ejemplo de problem.yaml:
 
