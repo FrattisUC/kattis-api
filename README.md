@@ -40,7 +40,7 @@ node appv2
 1. Ejemplo de problem.yaml:
 
   Valores relevantes:
-  1. name: <test_name>
+  1. name: <nombre_del_problema>
   1. validation: {custom, default}
 
 ```
