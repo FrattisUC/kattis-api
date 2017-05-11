@@ -1,6 +1,6 @@
 # IIC1103 VJudge Kattis Online
 
- * [Dependendia](#dependencias)
+ * [Dependencias](#dependencias)
  * [Uso](#uso)
  * [Añadir un nuevo problema](#añadir-un-nuevo-problema)
 
