@@ -22,7 +22,7 @@
   ```
   pip install plasTeX 
   ```
----
+
 
 ## Uso
 ### Para usar la App, en la línea de comandos:
@@ -37,7 +37,6 @@ node app
 node appv2
 ```
 
----
 
 ## Añadir un nuevo problema
 
