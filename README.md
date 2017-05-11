@@ -1,4 +1,28 @@
-# Para usar la App, en la línea de comandos:
+# IIC1103 VJudge Kattis Online
+
+ * [Uso](#uso)
+ * [Añadir un nuevo problema](#añadir-un-nuevo-problema) 
+
+
+## Dependencias
+
+### Javascript
+  1. [Node.js](https://nodejs.org/en/download/ "Download NodeJS")
+  2. [npm](https://github.com/npm/npm "npm github page")
+  
+### Python 2
+  1. [pip](https://pip.pypa.io/en/stable/installing/ "pip intall ")
+  2. python-yaml
+   ```
+   pip install pyyaml
+   ```
+  3. python-plastex
+  ```
+  pip install plasTeX 
+  ```
+
+## Uso
+### Para usar la App, en la línea de comandos:
 
 ```
 /* Para correr la versión 1, sin VClass */
@@ -12,10 +36,10 @@ node appv2
 
 ---
 
-# Para añadir un nuevo problema al servidor:
+## Añadir un nuevo problema
 
-1. Ir a kattis-api/kattis-problemtools/problemtools
-1. Crear una carpeta con nombre <nombre_del_problema>. La estructura interna incluye 5 carpetas y el archivo problem.yaml.
+1. Ir a `kattis-api/kattis-problemtools/problemtools`
+1. Crear una carpeta con nombre `<nombre_del_problema>`. La estructura interna incluye 5 carpetas y el archivo problem.yaml.
 
   Carpetas:
   1. data
