@@ -1,8 +1,10 @@
 # IIC1103 VJudge Kattis Online
 
+ * [Dependendia](#dependencias)
  * [Uso](#uso)
- * [Añadir un nuevo problema](#añadir-un-nuevo-problema) 
+ * [Añadir un nuevo problema](#añadir-un-nuevo-problema)
 
+---
 
 ## Dependencias
 
@@ -20,6 +22,7 @@
   ```
   pip install plasTeX 
   ```
+---
 
 ## Uso
 ### Para usar la App, en la línea de comandos:
