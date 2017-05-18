@@ -59,10 +59,9 @@ app.post('/submit', function(req, res) {
     });
 });
 
-/* TODO: Run python program
+/* Run python program
 */
-function run_program(path, script_name, problemName)
-{
+function run_program(path, script_name, problemName) {
     var PythonShell = require('python-shell');
     var options = {
     mode: 'text',
@@ -90,3 +89,13 @@ function run_program(path, script_name, problemName)
       console.log(body);
     });
 }
+
+/* Create new problem */
+app.post('/new_problem', function(req, res) {
+  var problemName = req.headers.problemname;
+  var route = prefixDir
+} )
+
+app.post('/add_test', function() {
+  var problemName = req.headers.problemname;
+})

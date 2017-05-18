@@ -1,0 +1,4 @@
+# Ignore submissions
+
+**/accepted/*.*
+**/submissions/**/*.py

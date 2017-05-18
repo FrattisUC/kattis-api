@@ -62,10 +62,10 @@ app.post('/submit', function(req, res) {
 
 });
 
-/* TODO: Run python program
+/*
+* Run python program
 */
-function run_program(path, script_name, problemName, callback)
-{
+function run_program(path, script_name, problemName, callback) {
     var PythonShell = require('python-shell');
     var options = {
     mode: 'text',
@@ -85,8 +85,30 @@ function run_program(path, script_name, problemName, callback)
     });
 
     pyshell.end(function (err) {
-      if (err) throw err;
+      if (err) {
+        //console.log(err);
+        //throw err;
+      }
       callback();
       console.log('finished');
     });
 }
+
+/*
+* TODO: check if problem is valid
+  - Has correct name
+  - Has tests
+  - Has folders
+*/
+
+/*
+* TODO: Set config limits
+*/
+
+/*
+* TODO: get inputs of problem
+*/
+
+/*
+* TODO: get answer of problem
+*/

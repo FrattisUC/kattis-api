@@ -11,7 +11,7 @@
 ### Javascript
   1. [Node.js](https://nodejs.org/en/download/ "Download NodeJS")
   2. [npm](https://github.com/npm/npm "npm github page")
-  
+
 ### Python 2
   1. [pip](https://pip.pypa.io/en/stable/installing/ "pip intall ")
   2. python-yaml
@@ -20,7 +20,7 @@
    ```
   3. python-plastex
   ```
-  pip install plasTeX 
+  pip install plasTeX
   ```
 
 
@@ -49,7 +49,7 @@ node appv2
   1. output_validators
   1. problem_statement
   1. submissions
-  
+
   Detalles de cada elemento:  
   1. data: contiene los tests que se van a probar en la carpeta sample y secret. Sample se usa para guardar los test púlbicos y secret, para los privados. Cada test de nombre <test_name> debe tener dos archivos asociados que deben estar en la misma ruta (en sample o en secret):
     - <test_name>.in : archivo que guarda el input que se le pasará al programa que se va a probar.
@@ -66,16 +66,21 @@ node appv2
 1. Ejemplo de problem.yaml:
 
   Valores relevantes:
-  1. name: <nombre_del_problema>
-  1. validation: custom
+  1. name (Necesario)
+  2. limits (Configuración del Problema)
 
-```
-# Override standard limits: say that the TLE solutions provided should
-# be at least 4 times above the time limit in order for us to be
-# happy.
-limits:
-  time_safety_margin: 4
+ 1. name: identifica al problema y debe tener el valor `<nombre_del_problema>`
+ 2. limits: sirve para especificar los siguientes valores:
+    1. time_for_AC_submissions
+  3. grading:
+    1. 'on_reject': 'grade'
+      Esto indica que la forma de evaluar es con una nota (a pesar de lo que puede sugerir el nombre del atributo)
+    2. 'accept_score': 7.0
+      Esta es la nota asociada a un test correcto
+    3. 'reject_score': 1.0
+      Esta es la nota asociada a un test incorrecto   
 
+```YAML
 # problem.yaml
 
 ## At least one of author, source, or rights_owner must be provided.
@@ -116,6 +121,13 @@ limits:
   validation_memory: 1024        # MB
 #  validation_output: 8           # MB
 
+# Override default grading
+grading:
+  on_reject: grade
+  accept_score: 7.0
+  reject_score: 1.0
+  objective: max
+#  range: -inf +inf
 
 ############################################################################
 # POSSIBLE VALUES FOR LICENSE:

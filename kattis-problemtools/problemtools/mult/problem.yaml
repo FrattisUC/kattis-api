@@ -1,9 +1,3 @@
-# Override standard limits: say that the TLE solutions provided should
-# be at least 4 times above the time limit in order for us to be
-# happy.
-limits:
-  time_safety_margin: 4
-
 # problem.yaml
 
 ## At least one of author, source, or rights_owner must be provided.
@@ -13,7 +7,7 @@ name: Mult
 author: Francesca
 
 ## Where the problem was first used (default: null)
-source: Kattis
+source: Francesca
 # source_url:
 
 ## Who owns the rights to the problem (default: value of author, or
@@ -34,9 +28,11 @@ validation: custom
 # Override standard limits: say that the TLE solutions provided should
 # be at least 4 times above the time limit in order for us to be
 # happy.
+
 limits:
 #  time_multiplier: 5
-  time_safety_margin: 4           # (default is 2)
+  time_for_AC_submissions: 10
+  time_safety_margin: 0.1           # (default is 2)
   memory: 1024                   # MB
 #  output: 8                      # MB
 #  compilation_time: 60           # seconds

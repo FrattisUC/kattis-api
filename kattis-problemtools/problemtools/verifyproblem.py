@@ -1022,6 +1022,7 @@ class Submissions(ProblemAspect):
         #If this config exists, overwrites timelim
         if 'time_for_AC_submissions' in self._problem.config.get('limits'):
             timelim = timelim_margin = self._problem.config.get('limits')['time_for_AC_submissions']
+
         if args.fixed_timelim is not None:
             timelim = args.fixed_timelim
             timelim_margin = timelim * self._problem.config.get('limits')['time_safety_margin']
