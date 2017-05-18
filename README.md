@@ -68,10 +68,10 @@ node appv2
    3. grading:
       1. `'on_reject': 'grade'` => Esto indica que la forma de evaluar es con una nota (a pesar de lo que puede sugerir el nombre del atributo)
       2. `'accept_score': 7.0` => Esta es la nota asociada a un test correcto
-      3. `'reject_score': 1.0` => Esta es la nota asociada a un test incorrecto 
-      
+      3. `'reject_score': 1.0` => Esta es la nota asociada a un test incorrecto
 
-***Ejemplo de un archivo problem.yaml:**
+
+**Ejemplo de un archivo problem.yaml:**
 ```YAML
 # problem.yaml
 
