@@ -43,40 +43,32 @@ node appv2
 1. Ir a `kattis-api/kattis-problemtools/problemtools`
 1. Crear una carpeta con nombre `<nombre_del_problema>`. La estructura interna incluye 5 carpetas y el archivo problem.yaml.
 
-  Carpetas:
-  1. data
-  1. input_format_validators
-  1. output_validators
-  1. problem_statement
-  1. submissions
+Carpetas:
+1. data
+1. input_format_validators
+1. output_validators
+1. problem_statement
+1. submissions
 
-  Detalles de cada elemento:  
-  1. data: contiene los tests que se van a probar en la carpeta sample y secret. Sample se usa para guardar los test púlbicos y secret, para los privados. Cada test de nombre <test_name> debe tener dos archivos asociados que deben estar en la misma ruta (en sample o en secret)
-    - <test_name>.in : archivo que guarda el input que se le pasará al programa que se va a probar.
-    - <test_name>.ans : archivo que guarda el output contra el que se comparará el input, o sea, una respuesta válida.
+Detalles de cada elemento:  
+1. data: contiene los tests que se van a probar en la carpeta sample y secret. Sample se usa para guardar los test púlbicos y secret, para los privados. Cada test de nombre `<test_name>` debe tener dos archivos asociados que deben estar en la misma ruta (en sample o en secret)
+   1. `<test_name>.in` : archivo que guarda el input que se le pasará al programa que se va a probar
+   1. `<test_name>.ans` : archivo que guarda el output contra el que se comparará el input, o sea, una respuesta válida.
+2. input_format_validator: se usa para revisar que los archivos .in cumplan con los requerimientos.
+3. output_format_validator: lo mismo, pero para output.
+4. problem_statement: guarda el archivo en latex del enunciado del problema (no implementado correctamente aún)
+5. submissions: guarda los programas subidos por los alumnos. TODO: Hacer que se borren cada cierto tiempo y guardar submissions en la base de datos de VClass (Google Drive).
 
-  2. input_format_validator: se usa para revisar que los archivos .in cumplan con los requerimientos.
-
-  3. output_format_validator: lo mismo, pero para output.
-
-  4. problem_statement: guarda el archivo en latex del enunciado del problema (no implementado correctamente aún)
-
-  5. submissions: guarda los programas subidos por los alumnos. TODO: Hacer que se borren cada cierto tiempo y guardar submissions en la base de datos de VClass (Google Drive).
-
-1. Configuración de problem.yaml:
-  1. name (Necesario)
-  2. limits (Configuración del Problema)
-
- 1. name: identifica al problema y debe tener el valor `<nombre_del_problema>`
- 2. limits: sirve para especificar los siguientes valores:
-    1. time_for_AC_submissions
-  3. grading:
-    1. 'on_reject': 'grade'
-      Esto indica que la forma de evaluar es con una nota (a pesar de lo que puede sugerir el nombre del atributo)
-    2. 'accept_score': 7.0
-      Esta es la nota asociada a un test correcto
-    3. 'reject_score': 1.0
-      Esta es la nota asociada a un test incorrecto   
+Configuración de problem.yaml:
+1. name (Necesario)
+2. limits (Configuración del Problema)
+   1. name: identifica al problema y debe tener el valor `<nombre_del_problema>`
+   2. limits: sirve para especificar los siguientes valores:
+      1. `time_for_AC_submissions: 3` => Esto indica que los programas tendrán un límite de 3 segundos
+   3. grading:
+      1. `'on_reject': 'grade'` => Esto indica que la forma de evaluar es con una nota (a pesar de lo que puede sugerir el nombre del atributo)
+      2. `'accept_score': 7.0` => Esta es la nota asociada a un test correcto
+      3. `'reject_score': 1.0` => Esta es la nota asociada a un test incorrecto   
 
 ```YAML
 # problem.yaml
