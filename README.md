@@ -51,7 +51,7 @@ node appv2
   1. submissions
 
   Detalles de cada elemento:  
-  1. data: contiene los tests que se van a probar en la carpeta sample y secret. Sample se usa para guardar los test púlbicos y secret, para los privados. Cada test de nombre <test_name> debe tener dos archivos asociados que deben estar en la misma ruta (en sample o en secret):
+  1. data: contiene los tests que se van a probar en la carpeta sample y secret. Sample se usa para guardar los test púlbicos y secret, para los privados. Cada test de nombre <test_name> debe tener dos archivos asociados que deben estar en la misma ruta (en sample o en secret)
     - <test_name>.in : archivo que guarda el input que se le pasará al programa que se va a probar.
     - <test_name>.ans : archivo que guarda el output contra el que se comparará el input, o sea, una respuesta válida.
 
@@ -63,9 +63,7 @@ node appv2
 
   5. submissions: guarda los programas subidos por los alumnos. TODO: Hacer que se borren cada cierto tiempo y guardar submissions en la base de datos de VClass (Google Drive).
 
-1. Ejemplo de problem.yaml:
-
-  Valores relevantes:
+1. Configuración de problem.yaml:
   1. name (Necesario)
   2. limits (Configuración del Problema)
 
