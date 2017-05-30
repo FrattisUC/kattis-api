@@ -58,6 +58,7 @@ node appv2
 3. output_format_validator: lo mismo, pero para output.
 4. problem_statement: guarda el archivo en latex del enunciado del problema (no implementado correctamente aún)
 5. submissions: guarda los programas subidos por los alumnos. TODO: Hacer que se borren cada cierto tiempo y guardar submissions en la base de datos de VClass (Google Drive).
+   1. accepted: carpeta en la que se guardan las submissions.
 
 **Configuración de problem.yaml:**
 1. `name`: identifica al problema y debe tener el valor `<nombre_del_problema>`
