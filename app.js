@@ -44,27 +44,38 @@ process.on('uncaughtException', function (err) {
 app.post('/submit', function(req, res) {
     var fstream ;
     var problemName = req.headers.problem;
-    req.pipe(req.busboy);
-    req.busboy.on('file', function (fieldname, file, filename) {
-        console.log("Uploading: " + filename);
+    if(problemName == null) {
+      res.send('No problem specified');
+    }
+    var problemDir = prefixDir + problemName;
+    if(!fs.existsSync(problemDir)) {
+      res.send('Can\'t find problem ' + problemName);
+    }
+    else {
+      try {
+        req.pipe(req.busboy);
+        req.busboy.on('file', function (fieldname, file, filename) {
+            console.log("Uploading: " + filename);
 
-        var name = shortid.generate();
-        var path = prefixDir + problemName + suffixDir
-        var problemDir = prefixDir + problemName;
-        console.log(path);
+            var name = shortid.generate();
+            var path = prefixDir + problemName + suffixDir
+            var problemDir = prefixDir + problemName;
+            console.log(path);
 
-        fstream = fs.createWriteStream(path + name + ".py");
-        file.pipe(fstream);
+            fstream = fs.createWriteStream(path + name + ".py");
+            file.pipe(fstream);
 
-        fstream.on('close', function () {
-          run_program(path, name, problemDir, function ()
-          {
-            res.send(results);
-          });
+            fstream.on('close', function () {
+              run_program(path, name, problemDir, function ()
+              {
+                res.send(results);
+              });
+            });
         });
-    });
-
-
+      } catch (e) {
+        res.send('Error reading file.');
+      }
+    }
 });
 
 /*
