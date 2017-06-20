@@ -1,5 +1,6 @@
 var express = require('express')
 var fs = require('fs');
+var path = require('path');
 var busboy = require('connect-busboy');
 var bodyParser = require('body-parser')
 var shortid = require('shortid');
@@ -122,9 +123,9 @@ app.post('/validate', function(req, res) {
 
 /*
 * TODO: check if problem is valid
-  - Has correct name
+  - Has correct name: check
   - Has tests
-  - Has folders
+  - Has folders: check
 */
 function is_program_valid(problemName, callback) {
 
@@ -139,8 +140,7 @@ function is_program_valid(problemName, callback) {
           msg = 'Problem exists';
           // Check folder structure
           msg += '\n'+ sync_check_folder_structure(path);
-          console.log('33 ' + msg);
-          //
+          console.log(msg);
         }
         else {
           msg = 'No problem name provided';
@@ -159,7 +159,7 @@ function is_program_valid(problemName, callback) {
 }
 
 /*
-* TODO: check folder structure
+* Check folder structure
 */
 function sync_check_folder_structure(problem_path) {
   data_stat = fs.existsSync(problem_path+'/data');
@@ -174,14 +174,6 @@ function sync_check_folder_structure(problem_path) {
   acc_subs_stat = fs.existsSync(problem_path+'/submissions');
 
   status = 'OK!';
-  // try {
-  //   var1 = data_stat == null;
-  //   console.log(var1);
-  // } catch (e) {
-  //   console.log('error:'+e);
-  // } finally {
-  //
-  // }
 
   if(data_stat == null || ifv_stat == null || ov_stat == null || ps_stat == null || subs_stat == null) {
     status = 'Main folders missing.'
@@ -197,13 +189,61 @@ function sync_check_folder_structure(problem_path) {
       + '\nOutputValidator: ' + (ov_stat)
       + '\nProblemStatement: ' + (ps_stat)
       + '\nSubmissions: ' + (subs_stat) + '\n\tAccepted: ' + (acc_subs_stat)
-      + '\n\nFolder Structure Status:' + status;
+      + '\n\nFolder Structure Status:' + status + '\n';
+
+  var tests_msg_sam = sync_check_tests(problem_path+'/data/sample');
+  var tests_msg_sec = sync_check_tests(problem_path+'/data/secret');
+
+  msg += tests_msg_sam;
+  msg += tests_msg_sec;
+
   return msg;
 }
 
 /*
-* TODO: tests
+* Tests
 */
+function sync_check_tests(tests_path) {
+  var dict = {};
+  /* Obtain tests */
+  fs.readdirSync(tests_path).forEach( file => {
+    var extension = path.extname(file);
+    var name = path.basename(file, extension);
+    if(extension === '.in' || extension === '.ans') {
+      if(dict[name] === undefined) {
+        dict[name] = [];
+        dict[name].push(extension);
+      }
+      else {
+        dict[name].push(extension);
+      }
+    }
+  });
+
+  var msg = "\nFolder " + tests_path + " has:\n";
+  /* Check tests without .in and check tests without .ans */
+  for (var key in dict) {
+    msg += " Test " + key + ":\n";
+    if (dict.hasOwnProperty(key)) {
+
+      if(dict[key].includes('.in')) {
+        msg += "  Has .in\n";
+      }
+      else {
+        msg += "  WARNING: Has not .in\n";
+      }
+      if(dict[key].includes('.ans')) {
+        msg += "  Has .ans\n";
+      }
+      else {
+        msg += "  WARNING: Has not .ans\n";
+      }
+    }
+  }
+
+  /* Return Info */
+  return msg;
+}
 
 /*
 * TODO: Upload problem.yaml
@@ -216,3 +256,12 @@ function sync_check_folder_structure(problem_path) {
 /*
 * TODO: get answer of problem
 */
+
+/* ========= Testing paths ============= */
+app.post('/test', function (req, res) {
+  var problemName = 'mult';
+  var path_sam = prefixDir + problemName + '/data/sample';
+  var path_sec = prefixDir + problemName + '/data/secret';
+  sync_check_tests(path_sam);
+  sync_check_tests(path_sec);
+});
