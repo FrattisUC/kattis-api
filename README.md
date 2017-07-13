@@ -37,6 +37,18 @@ node app
 node appv2
 ```
 
+### Para usar la App, en Heroku:
+
+Primero, revisar que en Procfile se tiene definida el archivo a correr. Después, hacer commit a los cambios. Luego:
+```
+git push heroku master
+heroku ps:scale web=1
+```
+
+### Para revisar log de Heroku
+```
+heroku logs --tail
+```
 
 ## Añadir un nuevo problema
 
