@@ -29,7 +29,7 @@
 
 ```
 /* Para correr la versión 1, sin VClass */
-node index
+node app
 ```
 ```
 /* Para correr la versión 2, con VClass (en construcción) */

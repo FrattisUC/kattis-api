@@ -6,7 +6,7 @@ var shortid = require('shortid');
 var request = require("request");
 
 var app = express()
-var port =  process.env.HOST || "3000";
+var port =  process.env.PORT || "3000";
 
 var prefixDir = 'kattis-problemtools/problemtools/';
 var suffixDir = '/submissions/accepted/';
