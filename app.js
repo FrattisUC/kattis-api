@@ -43,6 +43,8 @@ process.on('uncaughtException', function (err) {
 * Make program submission
 */
 app.post('/submit', function(req, res) {
+    console.log(req);
+    console.log(req.headers)
     var fstream ;
     var problemName = req.headers.problem;
     if(problemName == null) {
@@ -62,13 +64,17 @@ app.post('/submit', function(req, res) {
             var path = prefixDir + problemName + suffixDir
             var problemDir = prefixDir + problemName;
             console.log(path);
-
-            fstream = fs.createWriteStream(path + name + ".py");
+            var subPath = path + name + ".py";
+            fstream = fs.createWriteStream(subPath);
             file.pipe(fstream);
 
             fstream.on('close', function () {
               run_program(path, name, problemDir, function ()
               {
+                fs.unlink(subPath, (err) => {
+                  if (err) throw err;
+                  console.log('successfully deleted ' + subPath);
+                });
                 res.send(results);
               });
             });
@@ -246,7 +252,7 @@ function sync_check_tests(tests_path) {
 }
 
 /*
-* TODO: Upload problem.yaml
+* TODO: Upload problem.yaml, edit remotely
 */
 
 /*
