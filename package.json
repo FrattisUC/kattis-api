@@ -2,7 +2,7 @@
   "name": "kattis-api",
   "version": "1.0.0",
   "description": "API designed to be MW between CLI and Problemtools",
-  "main": "app.js",
+  "main": "index.js",
   "repository": "https://github.com/IIC1103-Kattis/kattis-api.git",
   "author": "Francesca Lucchini",
   "license": "MIT",
