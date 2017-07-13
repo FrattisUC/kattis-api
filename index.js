@@ -43,7 +43,7 @@ process.on('uncaughtException', function (err) {
 * Make program submission
 */
 app.post('/submit', function(req, res) {
-    console.log(req);
+    //console.log(req);
     console.log(req.headers)
     var fstream ;
     var problemName = req.headers.problem;
