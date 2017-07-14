@@ -28,7 +28,7 @@ app.listen(port, function () {
 */
 app.post('/login', function(req, res) {
   console.log("========DIR NAME:");
-  console.log(_dirname);
+  console.log(__dirname);
   results = [];
   res.send('Logged in!')
 })
