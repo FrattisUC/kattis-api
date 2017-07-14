@@ -27,6 +27,8 @@ app.listen(port, function () {
 /* TODO: Make Login submission
 */
 app.post('/login', function(req, res) {
+  console.log("========DIR NAME:");
+  console.log(_dirname);
   results = [];
   res.send('Logged in!')
 })
@@ -43,7 +45,7 @@ process.on('uncaughtException', function (err) {
 * Make program submission
 */
 app.post('/submit', function(req, res) {
-    //console.log(req);
+    console.log(_dirname);
     console.log(req.headers)
     var fstream ;
     var problemName = req.headers.problem;
