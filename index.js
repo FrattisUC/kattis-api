@@ -77,10 +77,12 @@ app.post('/submit', function(req, res) {
             fstream.on('close', function () {
               run_program(path, name, problemDir, function ()
               {
+                console.log(results);
                 fs.unlink(subPath, (err) => {
                   if (err) throw err;
                   console.log('successfully deleted ' + subPath);
                 });
+                console.log(results);
                 res.send(results);
               });
             });
