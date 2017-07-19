@@ -6,7 +6,7 @@ var bodyParser = require('body-parser')
 var shortid = require('shortid');
 
 var app = express()
-var port =  process.env.PORT || "3000";
+var port =  process.env.PORT || "81";
 
 var prefixDir = 'kattis-problemtools/problemtools/';
 var suffixDir = '/submissions/accepted/';
