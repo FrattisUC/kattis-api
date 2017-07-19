@@ -22,6 +22,7 @@ app.get('/', function (req, res) {
 
 app.listen(port, function () {
   console.log('Example app listening on port '+port+'!')
+  console.log('Running on: ' + __dirname);
 })
 
 /* TODO: Make Login submission
