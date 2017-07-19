@@ -28,10 +28,10 @@ app.listen(port, function () {
 */
 app.post('/login', function(req, res) {
   console.log("========DIR NAME:");
-  console.log(__dirname);
-  if (__dirname == '/app') {
-    prefixDir = 'app/' + prefixDir;
-  }
+  // console.log(__dirname);
+  // if (__dirname == '/app') {
+  //   prefixDir = 'app/' + prefixDir;
+  // }
   console.log('prefixDir: ' + prefixDir);
   results = [];
   res.send('Logged in!')
@@ -56,6 +56,7 @@ app.post('/submit', function(req, res) {
       res.send('No problem specified');
     }
     var problemDir = prefixDir + problemName;
+    console.log(problemDir);
     if(!fs.existsSync(problemDir)) {
       res.send('Can\'t find problem ' + problemName);
     }
