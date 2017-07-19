@@ -86,6 +86,7 @@ app.post('/submit', function(req, res) {
             });
         });
       } catch (e) {
+        console.log(e);
         res.send('Error reading file.');
       }
     }
