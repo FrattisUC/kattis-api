@@ -29,6 +29,10 @@ app.listen(port, function () {
 app.post('/login', function(req, res) {
   console.log("========DIR NAME:");
   console.log(__dirname);
+  if (__dirname == '/app') {
+    prefixDir += 'app/'
+  }
+  console.log('prefixDir: ' + prefixDir);
   results = [];
   res.send('Logged in!')
 })
