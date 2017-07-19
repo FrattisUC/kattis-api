@@ -49,14 +49,14 @@ process.on('uncaughtException', function (err) {
 * Make program submission
 */
 app.post('/submit', function(req, res) {
-    console.log(req.headers)
+    //console.log(req.headers)
     var fstream ;
     var problemName = req.headers.problem;
     if(problemName == null) {
       res.send('No problem specified');
     }
     var problemDir = prefixDir + problemName;
-    console.log(problemDir);
+    //console.log(problemDir);
     if(!fs.existsSync(problemDir)) {
       res.send('Can\'t find problem ' + problemName);
     }
