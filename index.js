@@ -74,11 +74,9 @@ app.post('/submit', function(req, res) {
             fstream = fs.createWriteStream(subPath);
             file.pipe(fstream);
 
-            var msg = [];
             fstream.on('close', function () {
-              run_program(path, name, problemDir, msg, function ()
+              run_program(path, name, problemDir, function ()
               {
-                console.log("Message:\n" + msg);
                 fs.unlink(subPath, (err) => {
                   if (err) throw err;
                   console.log('successfully deleted ' + subPath);
@@ -98,7 +96,7 @@ app.post('/submit', function(req, res) {
 /*
 * Run python program
 */
-function run_program(path, script_name, problemName, msg, callback) {
+function run_program(path, script_name, problemName, callback) {
     var PythonShell = require('python-shell');
     var options = {
     mode: 'text',
@@ -115,7 +113,6 @@ function run_program(path, script_name, problemName, msg, callback) {
       // received a message sent from the Python script (a simple "print" statement)
       console.log(message);
       results.push(message);
-      msg.push(message);
     });
 
     pyshell.end(function (err) {
