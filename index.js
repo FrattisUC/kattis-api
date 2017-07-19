@@ -30,7 +30,7 @@ app.post('/login', function(req, res) {
   console.log("========DIR NAME:");
   console.log(__dirname);
   if (__dirname == '/app') {
-    prefixDir += 'app/'
+    prefixDir = 'app/' + prefixDir;
   }
   console.log('prefixDir: ' + prefixDir);
   results = [];
