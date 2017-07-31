@@ -4,9 +4,10 @@ var path = require('path');
 var busboy = require('connect-busboy');
 var bodyParser = require('body-parser')
 var shortid = require('shortid');
+var http = require('http');
 
 var app = express()
-var port =  process.env.PORT || "3389";
+var port =  process.env.PORT || '3389';
 
 var prefixDir = 'kattis-problemtools/problemtools/';
 var suffixDir = '/submissions/accepted/';
@@ -28,10 +29,12 @@ app.listen(port, function () {
 /* TODO: Make Login submission
 */
 app.post('/login', function(req, res) {
-  console.log("========DIR NAME:");
+  console.log('========DIR NAME:');
   console.log('prefixDir: ' + prefixDir);
+  console.log('========SENDER:');
+  console.log(req.connection.remoteAddress);
   results = [];
-  res.send('Logged in!')
+  res.send('Logged in!');
 })
 
 /* ========= Error Handling ============= */
@@ -42,21 +45,25 @@ process.on('uncaughtException', function (err) {
 
 /* ========= Submissions ============= */
 
-/*
-* Make program submission
+/* Make program submission
 */
 app.post('/submit', function(req, res) {
-    console.log('================================================');
+    console.log(req.headers)
+    console.log(req.connection.remoteAddress)
+    console.log(req.socket.remoteAddress);
+    console.log(req.socket.remotePort);
     results = [];
-    console.log(results);
-    console.log('================================================');
+
     var fstream ;
     var problemName = req.headers.problem;
+    var subID = req.headers.subid;
+    var req_post = req.socket.remotePort;
+
     if(problemName == null) {
       res.send('No problem specified');
     }
+
     var problemDir = prefixDir + problemName;
-    //console.log(problemDir);
     if(!fs.existsSync(problemDir)) {
       res.send('Can\'t find problem ' + problemName);
     }
@@ -64,13 +71,13 @@ app.post('/submit', function(req, res) {
       try {
         req.pipe(req.busboy);
         req.busboy.on('file', function (fieldname, file, filename) {
-            console.log("Uploading: " + filename);
-
+            console.log('Uploading: ' + filename);
+            res.send('Evaluating...');
             var name = shortid.generate();
             var path = prefixDir + problemName + suffixDir
             var problemDir = prefixDir + problemName;
             console.log(path);
-            var subPath = path + name + ".py";
+            var subPath = path + name + '.py';
             fstream = fs.createWriteStream(subPath);
             file.pipe(fstream);
 
@@ -82,7 +89,8 @@ app.post('/submit', function(req, res) {
                   console.log('successfully deleted ' + subPath);
                 });
                 console.log(results);
-                res.send(results);
+                //HTTP request to Ruby
+                http_request(req_post, subID, results);
               });
             });
         });
@@ -93,8 +101,37 @@ app.post('/submit', function(req, res) {
     }
 });
 
-/*
-* Run python program
+
+/* Make HTTP request to Ruby
+*/
+function http_request(port, subID, results) {
+  var path = '/api/v1/online_judge_submissions/' + subID
+  var options = {
+    host: 'https://damp-shore-14178.herokuapp.com/',
+    path: path,
+    port: port,
+    method: 'PATCH',
+    json:true,
+    body: {
+      "online_judge_submission":{
+    		"result": results,
+    		"status": "Done"
+    	}
+    }
+  };
+
+  function callback(error, response, body) {
+    if (!error && response.statusCode == 200) {
+      var info = JSON.parse(body);
+      console.log(info.stargazers_count + " Stars");
+      console.log(info.forks_count + " Forks");
+    }
+  }
+
+
+}
+
+/* Run python program
 */
 function run_program(path, script_name, problemName, callback) {
     var PythonShell = require('python-shell');
@@ -108,9 +145,9 @@ function run_program(path, script_name, problemName, callback) {
 
     var pyshell = new PythonShell(verificationScript, options);
 
-    console.log("Running script...");
+    console.log('Running script...');
     pyshell.on('message', function (message) {
-      // received a message sent from the Python script (a simple "print" statement)
+      // received a message sent from the Python script (a simple 'print' statement)
       console.log(message);
       results.push(message);
     });
@@ -234,23 +271,23 @@ function sync_check_tests(tests_path) {
     }
   });
 
-  var msg = "\nFolder " + tests_path + " has:\n";
+  var msg = '\nFolder ' + tests_path + ' has:\n';
   /* Check tests without .in and check tests without .ans */
   for (var key in dict) {
-    msg += " Test " + key + ":\n";
+    msg += ' Test ' + key + ':\n';
     if (dict.hasOwnProperty(key)) {
 
       if(dict[key].includes('.in')) {
-        msg += "  Has .in\n";
+        msg += '  Has .in\n';
       }
       else {
-        msg += "  WARNING: Has not .in\n";
+        msg += '  WARNING: Has not .in\n';
       }
       if(dict[key].includes('.ans')) {
-        msg += "  Has .ans\n";
+        msg += '  Has .ans\n';
       }
       else {
-        msg += "  WARNING: Has not .ans\n";
+        msg += '  WARNING: Has not .ans\n';
       }
     }
   }

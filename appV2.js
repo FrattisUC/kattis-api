@@ -6,11 +6,12 @@ var shortid = require('shortid');
 var request = require("request");
 
 var app = express()
-var port =  process.env.PORT || "3000";
+var port =  process.env.PORT || "3389";
 
 var prefixDir = 'kattis-problemtools/problemtools/';
 var suffixDir = '/submissions/accepted/';
 var verificationScript = 'verifyproblem.py'
+var sender;
 var results = [];
 
 app.use(busboy());
@@ -27,12 +28,10 @@ app.listen(port, function () {
 /* TODO: Make Login submission
 */
 app.post('/login', function(req, res) {
+  console.log(req.connection.remoteAddress);
   results = [];
   res.send('Logged in!')
 })
-
-/* TODO: Make logout
-*/
 
 /*
 * Make program submission
