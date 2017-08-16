@@ -37,17 +37,26 @@ node app
 node appv2
 ```
 
-### Para usar la App, en Heroku:
+### Para usar la App, en Docker:
+https://docs.docker.com/edge/engine/reference/commandline/docker/
 
-Primero, revisar que en Procfile se tiene definida el archivo a correr. Después, hacer commit a los cambios. Luego:
+Para iniciar una imagen y correrla en un contenerdor
 ```
-git push heroku master
-heroku ps:scale web=1
+sudo docker build <folder_path> -t name:tag
+sudo docker run -P -i name
 ```
 
-### Para revisar log de Heroku
+Para borrar
 ```
-heroku logs --tail
+sudo docker rmi <image_name>
+sudo docker rm <container_name>
+sudo docker container prune
+```
+
+Para ver elementos
+```
+sudo docker images
+sudo docker ps -a
 ```
 
 ## Añadir un nuevo problema

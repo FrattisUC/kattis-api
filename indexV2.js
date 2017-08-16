@@ -90,7 +90,7 @@ app.post('/submit', function(req, res) {
                 });
                 console.log(results);
                 //HTTP request to Ruby
-                #http_request(req_post, subID, results);
+                //http_request(req_post, subID, results);
               });
             });
         });
