@@ -1,4 +1,0 @@
-Errores
-
-  Heroku:
-    1. No lee el path del archivo, revisar path desde el que revisa. 
