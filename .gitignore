@@ -1,4 +1,6 @@
 # Ignore submissions
 
-# **/accepted/*.*
-# **/submissions/**/*.py
+**/accepted/*.*
+**/submissions/**/*.py
+
+.ftpconfig
