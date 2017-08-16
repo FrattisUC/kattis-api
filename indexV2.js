@@ -90,7 +90,7 @@ app.post('/submit', function(req, res) {
                 });
                 console.log(results);
                 //HTTP request to Ruby
-                http_request(req_post, subID, results);
+                #http_request(req_post, subID, results);
               });
             });
         });
@@ -107,7 +107,7 @@ app.post('/submit', function(req, res) {
 function http_request(port, subID, results) {
   var path = '/api/v1/online_judge_submissions/' + subID
   var options = {
-    host: 'https://damp-shore-14178.herokuapp.com/',
+    host: '',
     path: path,
     port: port,
     method: 'PATCH',
