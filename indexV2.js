@@ -58,6 +58,7 @@ app.post('/submit', function(req, res) {
     var problemName = req.headers.problem;
     var subID = req.headers.subid;
     var req_post = req.socket.remotePort;
+    var address = req.connection.remoteAddress;
 
     if(problemName == null) {
       res.send('No problem specified');
@@ -90,7 +91,7 @@ app.post('/submit', function(req, res) {
                 });
                 console.log(results);
                 //HTTP request to Ruby
-                //http_request(req_post, subID, results);
+                http_request(req_post, subID, address, results);
               });
             });
         });
@@ -101,13 +102,12 @@ app.post('/submit', function(req, res) {
     }
 });
 
-
 /* Make HTTP request to Ruby
 */
-function http_request(port, subID, results) {
+function http_request(port, subID, address, results) {
   var path = '/api/v1/online_judge_submissions/' + subID
   var options = {
-    host: '',
+    host: address,
     path: path,
     port: port,
     method: 'PATCH',
@@ -120,6 +120,8 @@ function http_request(port, subID, results) {
     }
   };
 
+  console.log("Sending request to Ruby")
+  
   function callback(error, response, body) {
     if (!error && response.statusCode == 200) {
       var info = JSON.parse(body);
