@@ -218,7 +218,8 @@ class TestCase(ProblemAspect):
             res2.ac_runtime_testcase = res2.runtime_testcase
         #MAIN PRINT
         #self.msg('Test file result: %s)' % (res1))
-        self.msg('%s' % (res1))
+        #self.msg('%s' % (res1))
+        print('%s' % (res1))
         return (res1, res2, testcase)
 
     def get_all_testcases(self):
@@ -994,20 +995,37 @@ class Submissions(ProblemAspect):
         return 'submissions'
 
     def check_submission(self, sub, args, expected_verdict, timelim_low, timelim_high):
-        self.msg('Running submission %s' % (sub))
+        sub_name = str(sub).split('.py')
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+
+        directory = 'Results'
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        sys.stdout = open('Results/out_%s' % (sub_name[0]), 'w+');
+        #f = open('Results/out_%s' % (sub_name[0]), 'w+')
+        print('hi there\n')  # python will convert \n to os.linesep
+        print('Running submission %s' % (sub))
+
         (result1, result2, testcase) = self._problem.testdata.run_submission(sub, args, timelim_low, timelim_high)
         if result1.verdict != result2.verdict:
             self.warning('%s submission %s sensitive to time limit: limit of %s secs -> %s, limit of %s secs -> %s' % (expected_verdict, sub, timelim_low, result1.verdict, timelim_high, result2.verdict))
 
         if result1.verdict == expected_verdict:
             self.info('%s submission %s OK: %s' % (expected_verdict, sub, result1))
-
         elif result2.verdict == expected_verdict:
             self.warning('%s submission %s OK with extra time: %s' % (expected_verdict, sub, result2))
         else:
             self.error('%s submission %s got %s' % (expected_verdict, sub, result1))
+        # if result1.verdict == expected_verdict:
+        #     f.write('%s submission %s OK: %s' % (expected_verdict, sub, result1))
+        # elif result2.verdict == expected_verdict:
+        #     f.write('%s submission %s OK with extra time: %s' % (expected_verdict, sub, result2))
+        # else:
+        #     f.write('%s submission %s got %s' % (expected_verdict, sub, result1))
 
         self.msg('\n')
+        # f.write('\n')
+        # f.close()
         return result1
 
     def check(self, args):
@@ -1061,11 +1079,13 @@ class Submissions(ProblemAspect):
                 else:
                     max_runtime = None
                 if args.fixed_timelim is not None and args.fixed_timelim != timelim:
-                    self.msg("   Solutions give timelim of %d seconds, but will use provided fixed limit of %d seconds instead" % (timelim, args.fixed_timelim))
+                    #self.msg("   Solutions give timelim of %d seconds, but will use provided fixed limit of %d seconds instead" % (timelim, args.fixed_timelim))
+                    print("   Solutions give timelim of %d seconds, but will use provided fixed limit of %d seconds instead" % (timelim, args.fixed_timelim))
                     timelim = args.fixed_timelim
                     timelim_margin = timelim * self._problem.config.get('limits')['time_safety_margin']
 
-                self.msg("   Slowest AC runtime: %s, setting timelim to %d secs, safety margin to %d secs" % (max_runtime, timelim, timelim_margin))
+                #self.msg("   Slowest AC runtime: %s, setting timelim to %d secs, safety margin to %d secs" % (max_runtime, timelim, timelim_margin))
+                print("   Slowest AC runtime: %s, setting timelim to %d secs, safety margin to %d secs" % (max_runtime, timelim, timelim_margin))
             self._problem.config.get('limits')['time'] = timelim
 
         return self._check_res
@@ -1172,7 +1192,6 @@ def default_args():
 
 def main():
     args = argparser().parse_args()
-    #print args
     fmt = "%(levelname)s %(message)s"
     logging.basicConfig(stream=sys.stdout,
                         format=fmt,
@@ -1183,6 +1202,7 @@ def main():
         [errors, warnings] = prob.check(args)
         print "%s tested: %d errors, %d warnings" % (prob.shortname, errors, warnings)
 
+    sys.stdout.close()
     sys.exit(1 if errors > 0 else 0)
 
 if __name__ == '__main__':

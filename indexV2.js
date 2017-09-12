@@ -5,14 +5,16 @@ var busboy = require('connect-busboy');
 var bodyParser = require('body-parser')
 var shortid = require('shortid');
 var http = require('http');
+var querystring = require('querystring');
 
-var app = express()
+var app = express();
 var port =  process.env.PORT || '3389';
 
 var prefixDir = 'kattis-problemtools/problemtools/';
 var suffixDir = '/submissions/accepted/';
 var verificationScript = 'verifyproblem.py'
-var results = [];
+
+var resultsPath = 'Results/out_';
 
 app.use(busboy());
 app.use(bodyParser());
@@ -33,7 +35,9 @@ app.post('/login', function(req, res) {
   console.log('prefixDir: ' + prefixDir);
   console.log('========SENDER:');
   console.log(req.connection.remoteAddress);
-  results = [];
+
+  http_request('3000', '1', 'web', 'SJnr1hrF-');
+
   res.send('Logged in!');
 })
 
@@ -48,17 +52,18 @@ process.on('uncaughtException', function (err) {
 /* Make program submission
 */
 app.post('/submit', function(req, res) {
-    console.log(req.headers)
-    console.log(req.connection.remoteAddress)
-    console.log(req.socket.remoteAddress);
-    console.log(req.socket.remotePort);
-    results = [];
+    // console.log(req.headers)
+    // console.log(req.connection.remoteAddress)
+    // console.log(req.socket.remotePort);
 
     var fstream ;
     var problemName = req.headers.problem;
     var subID = req.headers.subid;
-    var req_post = req.socket.remotePort;
-    var address = req.connection.remoteAddress;
+    // var req_port = req.socket.remotePort;
+    // var address = req.connection.remoteAddress;
+
+    var req_port = 3000;
+    var address = 'web';
 
     if(problemName == null) {
       res.send('No problem specified');
@@ -74,26 +79,45 @@ app.post('/submit', function(req, res) {
         req.busboy.on('file', function (fieldname, file, filename) {
             console.log('Uploading: ' + filename);
             res.send('Evaluating...');
+
             var name = shortid.generate();
             var path = prefixDir + problemName + suffixDir
             var problemDir = prefixDir + problemName;
             console.log(path);
             var subPath = path + name + '.py';
+            console.log('subPath:' + subPath);
             fstream = fs.createWriteStream(subPath);
             file.pipe(fstream);
 
             fstream.on('close', function () {
               run_program(path, name, problemDir, function ()
               {
-                fs.unlink(subPath, (err) => {
-                  if (err) throw err;
-                  console.log('successfully deleted ' + subPath);
-                });
-                console.log(results);
-                //HTTP request to Ruby
-                http_request(req_post, subID, address, results);
+
+
+                http_request(req_port, subID, address, name);
+                // fs.readFile(resultsPath + name, 'utf8', function (err,data) {
+                //   if (err) {
+                //     return console.log('READ ERROR:' + err);
+                //   }
+                //
+                //
+                // });
+                //
+                // console.log('bloop');
+                // fs.unlink(subPath, (err) => {
+                //   if (err) throw err;
+                //   console.log('successfully deleted ' + subPath);
+                // });
+                // //HTTP request to Ruby
+                //
+                // var resultSubPath = resultsPath + name;
+                // fs.unlink(resultSubPath, (err) => {
+                //   if (err) throw err;
+                //   console.log('successfully deleted ' + resultSubPath);
+                // });
               });
             });
+            console.log('bleep');
         });
       } catch (e) {
         console.log(e);
@@ -102,66 +126,251 @@ app.post('/submit', function(req, res) {
     }
 });
 
+
 /* Make HTTP request to Ruby
 */
-function http_request(port, subID, address, results) {
-  var path = '/api/v1/online_judge_submissions/' + subID
-  var options = {
-    host: address,
-    path: path,
-    port: port,
-    method: 'PATCH',
-    json:true,
-    body: {
-      "online_judge_submission":{
-    		"result": results,
-    		"status": "Done"
-    	}
+function http_request(port, subID, address, problemName) {
+
+  /* https://nodejs.org/docs/latest/api/fs.html#fs_fs_watch_filename_options_listener */
+  let testFolder = './Results'
+
+  fs.watch('./Results', (eventType, filename) => {
+    console.log(`event type is: ${eventType}`);
+
+    if(eventType=='change' && filename) {
+
+      console.log('Reading ' + filename);
+
+      fs.readFile('./Results/'+filename, 'utf8', function (err,data) {
+        if (err) {
+          return console.log('READ ERROR:' + err);
+        }
+        else {
+          console.log('FILE:\n\r'+data);
+
+          /* Send request */
+          var request = require('request');
+          request.post({
+            headers: {'content-type' : 'application/json', 'Authorization': '1' },
+            url:     'http://web:3000/api/v1/online_judge_submissions/'+subID+'/node_result',
+            form:    {'result': data, 'status': 'Done'}
+          }, function(error, response, body){
+            console.log(body);
+          });
+
+
+        }
+      });
+
     }
-  };
+  });
 
-  console.log("Sending request to Ruby")
-  
-  function callback(error, response, body) {
-    if (!error && response.statusCode == 200) {
-      var info = JSON.parse(body);
-      console.log(info.stargazers_count + " Stars");
-      console.log(info.forks_count + " Forks");
-    }
-  }
-
-
+  // var path = '/api/v1/online_judge_submissions/' + subID
+  //
+  // Read result file
+  // var results;
+  // fs.readFile(resultsPath + problemName, 'utf8', function (err,data) {
+  //   if (err) {
+  //     return console.log(err);
+  //   }
+  //   results = data.split('\n');
+  //   console.log(data);
+  // var options = {
+  //     host: 'http://web:3000/api/v1/online_judge_submissions/',
+  //     path: path,
+  //     port: port,
+  //     method: 'PATCH',
+  //     json:true,
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //       'Authorization': '1'
+  //     },
+  //     body: {
+  //       "online_judge_submission":{
+  //     		"result": 'pochoco',
+  //     		"status": "Done"
+  //     	}
+  //     }
+  //   };
+  //
+  // console.log(options);
+  //
+  // function callback(error, response, body) {
+  //   if (!error && response.statusCode == 200) {
+  //     var info = JSON.parse(body);
+  //   }
+  // }
+  //
+  // console.log('Sending request');
+  // request(options, callback).on('response', function(response) {
+  //   console.log('Fisrt attempt response:')
+  //   console.log(response.statusCode);
+  //   console.log(response);
+  // });
+  // request
+  // .get('http://172.20.0.3')
+  // .on('response', function(response) {
+  //   console.log(response.statusCode) // 200
+  //   console.log(response) // 'image/png'
+  // })
+  //
+  // request
+  // .get('http://web:3000/api/v1')
+  // .on('response', function(response) {
+  //   console.log(response.statusCode) // 200
+  //   console.log(response) // 'image/png'
+  // })
+  //
+  // request
+  // .patch('http://web:3000/api/v1/online_judge_submissions/'+subID)
+  // .on('response', function(response) {
+  //   console.log(response.statusCode) // 200
+  //   //console.log(response.) // 'image/png'
+  // })
+  //
+  // request({
+  //   headers: {
+  //     'Content-Type': 'application/json',
+  //     'Authorization': '1'
+  //   },
+  //   body: {
+  //     "online_judge_submission":{
+  //       "result": 'pochoco',
+  //       "status": "Done"
+  //     }
+  //   },
+  //   uri: 'http://web:3000/api/v1/online_judge_submissions/' + subID,
+  //   method: 'PATCH'
+  // }, function (err, res, body) {
+  //   if (err) {
+  //     return console.log(err);
+  //   };
+  //   console.log('BODY:' + body);
+  // });
+  //
+  // const postData = querystring.stringify({
+  //   'online_judge_submission':{
+  //     'result': 'pochoco',
+  //     'status': 'Done'
+  //   }
+  // });
+  //
+  // // An object of options to indicate where to post to
+  // const post_options = {
+  //     host: 'web',
+  //     port: '3000',
+  //     path: '/api/v1/online_judge_submissions/' + subID,
+  //     method: 'PATCH',
+  //     headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': '1'
+  //     }
+  // };
+  //
+  // Set up the request
+  // var post_req = http.request(post_options, function(res) {
+  //     res.on('data', function (chunk) {
+  //         console.log('Response: ' + chunk);
+  //     });
+  // });
+  //
+  // const post_req = http.request(post_options);
+  //
+  // post_req.write(postData);
+  //
+  // post_req.end();
+  //
+  // var options = {
+  //     host: 'web',
+  //     port: 3000,
+  //     path: '/api/v1/online_judge_submissions/' + subID,
+  //     method: 'POST',
+  //     headers: {
+  //         "Content-Type": "application/json",
+  //         "Authorization": "1"
+  //     },
+  //     body: {
+  //       "online_judge_submission":{
+  //         "result": "pochoco",
+  //         "status": "Done"
+  //       }
+  //     }
+  // };
+  //
+  // var req = https.request(options, function(res) {
+  //     console.log("statusCode: ", res.statusCode);
+  //     console.log("headers: ", res);
+  //
+  //     res.on('data', function(d) {
+  //         process.stdout.write(d);
+  //     });
+  // });
+  //
+  // req.end();
+  //
+  // var https = require('https');
+  // var querystring = require('querystring');
+  // const options = {
+  //     port: 3000,
+  //     hostname: 'web',
+  //     path: '/api/v1/online_judge_submissions/'+ subID +'/node_result',
+  //     method: 'POST',
+  //     headers: {
+  //         "Content-Type": "application/json",
+  //         "Authorization": "1",
+  //     },
+  // };
+  //
+  // const req = http.request(options);
+  // const postData = querystring.stringify({
+  //   'status' : '3', 'result': 'boo'
+  // });
+  //
+  // console.log('Post Data:' + postData);
+  //
+  // req.write(postData);
+  // console.log(req);
+  // req.end();
 }
 
 /* Run python program
 */
 function run_program(path, script_name, problemName, callback) {
-    var PythonShell = require('python-shell');
-    var options = {
-    mode: 'text',
-    pythonPath: 'python',
-    pythonOptions: ['-u'],
-    scriptPath: prefixDir,
-    args: [problemName, '-s', script_name]
-    };
+    // var PythonShell = require('python-shell');
+    // var options = {
+    // mode: 'text',
+    // pythonPath: 'python',
+    // pythonOptions: ['-u'],
+    // scriptPath: prefixDir,
+    // args: [problemName, '-s', script_name]
+    // };
+    //
+    // console.log('Running script yay...');
+    //
+    // var pyshell = new PythonShell(verificationScript, options);
+    // console.log(pyshell);
+    // pyshell.on('message', function (message) {
+    //   // received a message sent from the Python script (a simple 'print' statement)
+    //   console.log('mem ' + message);
+    //   results.push(message);
+    // });
+    //
+    //pyshell.end(function (err) {
+    //   if (err) {
+    //     //console.log(err);
+    //     //throw err;
+    //   }
+    //   callback();
+    //   console.log('finished');
+    // });
 
-    var pyshell = new PythonShell(verificationScript, options);
+    const cp = require('child_process');
+    console.log('python ' + prefixDir + verificationScript + ' ' + problemName + ' -s ' + script_name);
+    cp.exec('python ' + prefixDir + verificationScript + ' ' + problemName + ' -s ' + script_name);
 
-    console.log('Running script...');
-    pyshell.on('message', function (message) {
-      // received a message sent from the Python script (a simple 'print' statement)
-      console.log(message);
-      results.push(message);
-    });
+    console.log('Finished running script');
 
-    pyshell.end(function (err) {
-      if (err) {
-        //console.log(err);
-        //throw err;
-      }
-      callback();
-      console.log('finished');
-    });
+    callback();
 }
 
 /* ========= Validate Problem ============= */
