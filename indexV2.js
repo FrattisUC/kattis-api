@@ -92,8 +92,6 @@ app.post('/submit', function(req, res) {
             fstream.on('close', function () {
               run_program(path, name, problemDir, function ()
               {
-
-
                 http_request(req_port, subID, address, name);
                 // fs.readFile(resultsPath + name, 'utf8', function (err,data) {
                 //   if (err) {
@@ -363,6 +361,10 @@ function run_program(path, script_name, problemName, callback) {
     //   callback();
     //   console.log('finished');
     // });
+    console.log(path)
+    if (!fs.existsSync(path+'/submissions');) {
+      fs.mkdirSync(path+'/submissions');
+    }
 
     const cp = require('child_process');
     console.log('python ' + prefixDir + verificationScript + ' ' + problemName + ' -s ' + script_name);
