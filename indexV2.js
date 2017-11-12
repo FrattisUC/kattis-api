@@ -36,7 +36,7 @@ app.post('/login', function(req, res) {
   console.log('========SENDER:');
   console.log(req.connection.remoteAddress);
 
-  http_request('3000', '1', 'web', 'SJnr1hrF-');
+  http_request('3000', '1', 'webapi', 'SJnr1hrF-');
 
   res.send('Logged in!');
 })
@@ -63,7 +63,7 @@ app.post('/submit', function(req, res) {
     // var address = req.connection.remoteAddress;
 
     var req_port = 3000;
-    var address = 'web';
+    var address = 'webapi';
 
     if(problemName == null) {
       res.send('No problem specified');
@@ -151,8 +151,8 @@ function http_request(port, subID, address, problemName) {
           /* Send request */
           var request = require('request');
           request.post({
-            headers: {'content-type' : 'application/json', 'Authorization': '1' },
-            url:     'http://web:3000/api/v1/online_judge_submissions/'+subID+'/node_result',
+            headers: {'content-type' : 'application/json', 'Authorization': 'OQTIeuSRv4mWHNwUCmWgiQ' },
+            url:     'http://webapi:3000/api/v1/online_judge_submissions/'+subID+'/node_result',
             form:    {'result': data, 'status': 'Done'}
           }, function(error, response, body){
             console.log(body);
