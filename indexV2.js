@@ -362,7 +362,7 @@ function run_program(path, script_name, problemName, callback) {
     //   console.log('finished');
     // });
     console.log(path)
-    if (!fs.existsSync(path+'/submissions');) {
+    if (!fs.existsSync(path+'/submissions')) {
       fs.mkdirSync(path+'/submissions');
     }
 
