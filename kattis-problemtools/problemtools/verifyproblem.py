@@ -1002,9 +1002,9 @@ class Submissions(ProblemAspect):
         if not os.path.exists(directory):
             os.makedirs(directory)
         sys.stdout = open('Results/out_%s' % (sub_name[0]), 'w+');
-        #f = open('Results/out_%s' % (sub_name[0]), 'w+')
-        print('hi there\n')  # python will convert \n to os.linesep
-        print('Running submission %s' % (sub))
+        # f = open('Results/out_%s' % (sub_name[0]), 'w+')
+        # print('hi there\n')  # python will convert \n to os.linesep
+        # print('Running submission %s' % (sub))
 
         (result1, result2, testcase) = self._problem.testdata.run_submission(sub, args, timelim_low, timelim_high)
         if result1.verdict != result2.verdict:
