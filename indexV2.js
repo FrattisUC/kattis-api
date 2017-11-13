@@ -52,13 +52,14 @@ process.on('uncaughtException', function (err) {
 /* Make program submission
 */
 app.post('/submit', function(req, res) {
-    // console.log(req.headers)
+    console.log(req.headers)
     // console.log(req.connection.remoteAddress)
     // console.log(req.socket.remotePort);
 
     var fstream ;
-    var problemName = req.headers.problem;
-    var subID = req.headers.subid;
+    const problemName = req.headers.problem;
+    const subID = req.headers.subid;
+    const auth_token = req.headers.authorization;
     // var req_port = req.socket.remotePort;
     // var address = req.connection.remoteAddress;
 
@@ -92,7 +93,7 @@ app.post('/submit', function(req, res) {
             fstream.on('close', function () {
               run_program(path, name, problemDir, function ()
               {
-                http_request(req_port, subID, address, name);
+                http_request(req_port, subID, address, name, auth_token);
                 // fs.readFile(resultsPath + name, 'utf8', function (err,data) {
                 //   if (err) {
                 //     return console.log('READ ERROR:' + err);
@@ -127,7 +128,7 @@ app.post('/submit', function(req, res) {
 
 /* Make HTTP request to Ruby
 */
-function http_request(port, subID, address, problemName) {
+function http_request(port, subID, address, problemName, auth_token) {
 
   /* https://nodejs.org/docs/latest/api/fs.html#fs_fs_watch_filename_options_listener */
   let testFolder = './Results'
@@ -149,7 +150,7 @@ function http_request(port, subID, address, problemName) {
           /* Send request */
           var request = require('request');
           request.post({
-            headers: {'content-type' : 'application/json', 'Authorization': 'OQTIeuSRv4mWHNwUCmWgiQ' },
+            headers: {'content-type' : 'application/json', 'Authorization': auth_token },
             url:     'http://webapi:3000/api/v1/online_judge_submissions/'+subID+'/node_result',
             form:    {'result': data, 'status': 'Done'}
           }, function(error, response, body){
