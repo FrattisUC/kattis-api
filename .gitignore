@@ -4,3 +4,5 @@
 **/submissions/**/*.py
 
 .ftpconfig
+
+Results/**

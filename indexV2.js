@@ -14,7 +14,9 @@ var prefixDir = 'kattis-problemtools/problemtools/';
 var suffixDir = '/submissions/accepted/';
 var verificationScript = 'verifyproblem.py'
 
-var resultsPath = 'Results/out_';
+var resultsPath = 'Results/';
+
+
 
 app.use(busboy());
 app.use(bodyParser());
@@ -52,7 +54,7 @@ process.on('uncaughtException', function (err) {
 /* Make program submission
 */
 app.post('/submit', function(req, res) {
-    console.log(req.headers)
+    // console.log(req.headers)
     // console.log(req.connection.remoteAddress)
     // console.log(req.socket.remotePort);
 
@@ -78,45 +80,38 @@ app.post('/submit', function(req, res) {
       try {
         req.pipe(req.busboy);
         req.busboy.on('file', function (fieldname, file, filename) {
-            console.log('Uploading: ' + filename);
+            // console.log('Uploading: ' + filename);
             res.send('Evaluating...');
 
             var name = shortid.generate();
+            var orig_name = name + '.py';
             var path = prefixDir + problemName + suffixDir
             var problemDir = prefixDir + problemName;
-            console.log(path);
+            // console.log(path);
             var subPath = path + name + '.py';
-            console.log('subPath:' + subPath);
+            // console.log('subPath:' + subPath);
             fstream = fs.createWriteStream(subPath);
             file.pipe(fstream);
 
             fstream.on('close', function () {
               run_program(path, name, problemDir, function ()
               {
-                http_request(req_port, subID, address, name, auth_token);
-                // fs.readFile(resultsPath + name, 'utf8', function (err,data) {
-                //   if (err) {
-                //     return console.log('READ ERROR:' + err);
-                //   }
-                //
-                //
-                // });
-                //
-                // console.log('bloop');
-                // fs.unlink(subPath, (err) => {
-                //   if (err) throw err;
-                //   console.log('successfully deleted ' + subPath);
-                // });
-                // //HTTP request to Ruby
-                //
-                // var resultSubPath = resultsPath + name;
-                // fs.unlink(resultSubPath, (err) => {
-                //   if (err) throw err;
-                //   console.log('successfully deleted ' + resultSubPath);
-                // });
+                // console.log("bloop")
+                http_request(req_port, subID, address, name, auth_token, (name) => {
+                  var resultSubPath = resultsPath + name;
+                  
+                  fs.unlink(subPath, (err) => {
+                    if (err) throw err;
+                    console.log('successfully deleted ' + path + orig_name);
+                  });
+                  fs.unlink(resultSubPath, (err) => {
+                    if (err) throw err;
+                    console.log('successfully deleted ' + resultSubPath);
+                  });
+                });
               });
             });
-            console.log('bleep');
+            // console.log('bleep');
         });
       } catch (e) {
         console.log(e);
@@ -128,13 +123,14 @@ app.post('/submit', function(req, res) {
 
 /* Make HTTP request to Ruby
 */
-function http_request(port, subID, address, problemName, auth_token) {
+function http_request(port, subID, address, problemName, auth_token, callback) {
 
   /* https://nodejs.org/docs/latest/api/fs.html#fs_fs_watch_filename_options_listener */
+  var filename = ''
   let testFolder = './Results'
-
+  // console.log("bloop2")
   fs.watch('./Results', (eventType, filename) => {
-    console.log(`event type is: ${eventType}`);
+    // console.log(`event type is: ${eventType}`);
 
     if(eventType=='change' && filename) {
 
@@ -154,182 +150,14 @@ function http_request(port, subID, address, problemName, auth_token) {
             url:     'http://webapi:3000/api/v1/online_judge_submissions/'+subID+'/node_result',
             form:    {'result': data, 'status': 'Done'}
           }, function(error, response, body){
-            console.log(body);
+            console.log("callback")
+            callback(filename);
           });
-
-
         }
       });
 
     }
   });
-
-  // var path = '/api/v1/online_judge_submissions/' + subID
-  //
-  // Read result file
-  // var results;
-  // fs.readFile(resultsPath + problemName, 'utf8', function (err,data) {
-  //   if (err) {
-  //     return console.log(err);
-  //   }
-  //   results = data.split('\n');
-  //   console.log(data);
-  // var options = {
-  //     host: 'http://web:3000/api/v1/online_judge_submissions/',
-  //     path: path,
-  //     port: port,
-  //     method: 'PATCH',
-  //     json:true,
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //       'Authorization': '1'
-  //     },
-  //     body: {
-  //       "online_judge_submission":{
-  //     		"result": 'pochoco',
-  //     		"status": "Done"
-  //     	}
-  //     }
-  //   };
-  //
-  // console.log(options);
-  //
-  // function callback(error, response, body) {
-  //   if (!error && response.statusCode == 200) {
-  //     var info = JSON.parse(body);
-  //   }
-  // }
-  //
-  // console.log('Sending request');
-  // request(options, callback).on('response', function(response) {
-  //   console.log('Fisrt attempt response:')
-  //   console.log(response.statusCode);
-  //   console.log(response);
-  // });
-  // request
-  // .get('http://172.20.0.3')
-  // .on('response', function(response) {
-  //   console.log(response.statusCode) // 200
-  //   console.log(response) // 'image/png'
-  // })
-  //
-  // request
-  // .get('http://web:3000/api/v1')
-  // .on('response', function(response) {
-  //   console.log(response.statusCode) // 200
-  //   console.log(response) // 'image/png'
-  // })
-  //
-  // request
-  // .patch('http://web:3000/api/v1/online_judge_submissions/'+subID)
-  // .on('response', function(response) {
-  //   console.log(response.statusCode) // 200
-  //   //console.log(response.) // 'image/png'
-  // })
-  //
-  // request({
-  //   headers: {
-  //     'Content-Type': 'application/json',
-  //     'Authorization': '1'
-  //   },
-  //   body: {
-  //     "online_judge_submission":{
-  //       "result": 'pochoco',
-  //       "status": "Done"
-  //     }
-  //   },
-  //   uri: 'http://web:3000/api/v1/online_judge_submissions/' + subID,
-  //   method: 'PATCH'
-  // }, function (err, res, body) {
-  //   if (err) {
-  //     return console.log(err);
-  //   };
-  //   console.log('BODY:' + body);
-  // });
-  //
-  // const postData = querystring.stringify({
-  //   'online_judge_submission':{
-  //     'result': 'pochoco',
-  //     'status': 'Done'
-  //   }
-  // });
-  //
-  // // An object of options to indicate where to post to
-  // const post_options = {
-  //     host: 'web',
-  //     port: '3000',
-  //     path: '/api/v1/online_judge_submissions/' + subID,
-  //     method: 'PATCH',
-  //     headers: {
-  //         'Content-Type': 'application/json',
-  //         'Authorization': '1'
-  //     }
-  // };
-  //
-  // Set up the request
-  // var post_req = http.request(post_options, function(res) {
-  //     res.on('data', function (chunk) {
-  //         console.log('Response: ' + chunk);
-  //     });
-  // });
-  //
-  // const post_req = http.request(post_options);
-  //
-  // post_req.write(postData);
-  //
-  // post_req.end();
-  //
-  // var options = {
-  //     host: 'web',
-  //     port: 3000,
-  //     path: '/api/v1/online_judge_submissions/' + subID,
-  //     method: 'POST',
-  //     headers: {
-  //         "Content-Type": "application/json",
-  //         "Authorization": "1"
-  //     },
-  //     body: {
-  //       "online_judge_submission":{
-  //         "result": "pochoco",
-  //         "status": "Done"
-  //       }
-  //     }
-  // };
-  //
-  // var req = https.request(options, function(res) {
-  //     console.log("statusCode: ", res.statusCode);
-  //     console.log("headers: ", res);
-  //
-  //     res.on('data', function(d) {
-  //         process.stdout.write(d);
-  //     });
-  // });
-  //
-  // req.end();
-  //
-  // var https = require('https');
-  // var querystring = require('querystring');
-  // const options = {
-  //     port: 3000,
-  //     hostname: 'web',
-  //     path: '/api/v1/online_judge_submissions/'+ subID +'/node_result',
-  //     method: 'POST',
-  //     headers: {
-  //         "Content-Type": "application/json",
-  //         "Authorization": "1",
-  //     },
-  // };
-  //
-  // const req = http.request(options);
-  // const postData = querystring.stringify({
-  //   'status' : '3', 'result': 'boo'
-  // });
-  //
-  // console.log('Post Data:' + postData);
-  //
-  // req.write(postData);
-  // console.log(req);
-  // req.end();
 }
 
 /* Run python program
