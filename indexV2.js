@@ -27,7 +27,7 @@ app.get('/', function (req, res) {
 
 app.listen(port, function () {
   console.log('Example app listening on port '+port+'!')
-  console.log('Running on: ' + __dirname);
+  console.log('Running on: ' + __dirname + '\n\n');
 })
 
 /* TODO: Make Login submission
@@ -99,7 +99,8 @@ app.post('/submit', function(req, res) {
                 // console.log("bloop")
                 http_request(req_port, subID, address, name, auth_token, (name) => {
                   var resultSubPath = resultsPath + name;
-                  
+
+                  /* Delete submission and its results */
                   fs.unlink(subPath, (err) => {
                     if (err) throw err;
                     console.log('successfully deleted ' + path + orig_name);
@@ -134,7 +135,7 @@ function http_request(port, subID, address, problemName, auth_token, callback) {
 
     if(eventType=='change' && filename) {
 
-      console.log('Reading ' + filename);
+      // console.log('Reading ' + filename);
 
       fs.readFile('./Results/'+filename, 'utf8', function (err,data) {
         if (err) {
@@ -150,7 +151,7 @@ function http_request(port, subID, address, problemName, auth_token, callback) {
             url:     'http://webapi:3000/api/v1/online_judge_submissions/'+subID+'/node_result',
             form:    {'result': data, 'status': 'Done'}
           }, function(error, response, body){
-            console.log("callback")
+            // console.log("callback")
             callback(filename);
           });
         }
@@ -163,43 +164,16 @@ function http_request(port, subID, address, problemName, auth_token, callback) {
 /* Run python program
 */
 function run_program(path, script_name, problemName, callback) {
-    // var PythonShell = require('python-shell');
-    // var options = {
-    // mode: 'text',
-    // pythonPath: 'python',
-    // pythonOptions: ['-u'],
-    // scriptPath: prefixDir,
-    // args: [problemName, '-s', script_name]
-    // };
-    //
-    // console.log('Running script yay...');
-    //
-    // var pyshell = new PythonShell(verificationScript, options);
-    // console.log(pyshell);
-    // pyshell.on('message', function (message) {
-    //   // received a message sent from the Python script (a simple 'print' statement)
-    //   console.log('mem ' + message);
-    //   results.push(message);
-    // });
-    //
-    //pyshell.end(function (err) {
-    //   if (err) {
-    //     //console.log(err);
-    //     //throw err;
-    //   }
-    //   callback();
-    //   console.log('finished');
-    // });
-    console.log(path)
+    // console.log(path)
     if (!fs.existsSync(path+'/submissions')) {
       fs.mkdirSync(path+'/submissions');
     }
 
     const cp = require('child_process');
-    console.log('python ' + prefixDir + verificationScript + ' ' + problemName + ' -s ' + script_name);
+    // console.log('python ' + prefixDir + verificationScript + ' ' + problemName + ' -s ' + script_name);
     cp.exec('python ' + prefixDir + verificationScript + ' ' + problemName + ' -s ' + script_name);
 
-    console.log('Finished running script');
+    // console.log('Finished running script');
 
     callback();
 }

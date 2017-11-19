@@ -4,18 +4,48 @@
 
 var express = require('express')
 
-/* Language, sub ID, user, auth_token, boolean, tests results (array), full string */
-class Results {
-
+class Test {
+  constructor() {
+    this.number = 0;
+    this.value = 'value';
+  }
 }
+
+/* sub ID, boolean, tests results (array), full string */
+class Results {
+  constructor() {
+    this.sub_id = 'sub_id';
+    this.overall = 'false'
+    this.tests = [];
+    this.comments = 'comment';
+  }
+}
+
+
+/*
+FILE:
+WA [CPU: 0.01s @ test case sample/02]
+WA [CPU: 0.01s @ test case secret/01]
+WA [CPU: 0.01s @ test case secret/03]
+
+
+   Slowest AC runtime: 0.012, setting timelim to 1 secs, safety margin to 2 secs
+mult tested: 0 errors, 0 warnings
+*/
 
 /* TODO: dar numero a los cases por orden alfabetico */
 
-export function process_results(results) {
+export function process_results(sub_id, string) {
   console.log(results)
-  return "Hello";
+  let ret = new Results();
+  ret.sub_id = sub_id;
+  for (var i = 0; i < array.length; i++) {
+    array[i]
+  }
+  console.log(ret)
+  return ret;
 }
 
-function functionName() {
-
+function getTestsResults(string) {
+  var tests = string.split("\n");
 }
