@@ -128,14 +128,14 @@ function http_request(port, subID, address, problemName, auth_token, callback) {
 
   /* https://nodejs.org/docs/latest/api/fs.html#fs_fs_watch_filename_options_listener */
   var filename = ''
-  let testFolder = './Results'
+  const testFolder = './Results'
   // console.log("bloop2")
   fs.watch('./Results', (eventType, filename) => {
     // console.log(`event type is: ${eventType}`);
 
     if(eventType=='change' && filename) {
 
-      // console.log('Reading ' + filename);
+      console.log('Reading ' + filename);
 
       fs.readFile('./Results/'+filename, 'utf8', function (err,data) {
         if (err) {
@@ -164,6 +164,7 @@ function http_request(port, subID, address, problemName, auth_token, callback) {
 }
 
 function process_data(data, callback) {
+  console.log('Processing');
   tests = data.split('\n');
   online_judge_submissions = {};
   sub_test_att = {};
@@ -196,29 +197,29 @@ function process_data(data, callback) {
   }
 
   /* Set array of tests insisde corresponding json object */
-  online_judge_submissions['submission_test_attributes'] = sub_test_att;
+  online_judge_submissions['submission_tests_attributes'] = sub_test_att;
   online_judge_submissions['status'] = status;
   online_judge_submissions['success'] = total_sucess;
 
 
-  // console.log({'online_judge_submissions':online_judge_submissions})
-  ret = JSON.stringify({'online_judge_submissions':online_judge_submissions})
+   console.log({'online_judge_submissions':online_judge_submissions})
+  ret = {'online_judge_submission':online_judge_submissions}
   callback(ret);
 }
 
 /* Run python program
 */
 function run_program(path, script_name, problemName, callback) {
-    // console.log(path)
+    console.log('Running')
     if (!fs.existsSync(path+'/submissions')) {
       fs.mkdirSync(path+'/submissions');
     }
 
     const cp = require('child_process');
-    // console.log('python ' + prefixDir + verificationScript + ' ' + problemName + ' -s ' + script_name);
+    console.log('python ' + prefixDir + verificationScript + ' ' + problemName + ' -s ' + script_name);
     cp.exec('python ' + prefixDir + verificationScript + ' ' + problemName + ' -s ' + script_name);
 
-    // console.log('Finished running script');
+    console.log('Finished running script');
 
     callback();
 }
