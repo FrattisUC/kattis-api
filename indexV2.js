@@ -142,23 +142,68 @@ function http_request(port, subID, address, problemName, auth_token, callback) {
           return console.log('READ ERROR:' + err);
         }
         else {
-          console.log('FILE:\n\r'+data);
-
-          /* Send request */
-          var request = require('request');
-          request.post({
-            headers: {'content-type' : 'application/json', 'Authorization': auth_token },
-            url:     'http://webapi:3000/api/v1/online_judge_submissions/'+subID+'/node_result',
-            form:    {'result': data, 'status': 'Done'}
-          }, function(error, response, body){
-            // console.log("callback")
-            callback(filename);
+          // console.log('FILE:\n\r'+data);
+          process_data(data, (p_data) => {
+            console.log(p_data);
+            /* Send request */
+            var request = require('request');
+            request.post({
+              headers: {'content-type' : 'application/json', 'Authorization': auth_token },
+              url:     'http://webapi:3000/api/v1/online_judge_submissions/'+subID+'/node_result',
+              form: p_data
+            }, function(error, response, body){
+              // console.log("callback")
+              callback(filename);
+            });
           });
         }
       });
 
     }
   });
+}
+
+function process_data(data, callback) {
+  tests = data.split('\n');
+  online_judge_submissions = {};
+  sub_test_att = {};
+
+  /* Build basic Online Judge Submission values */
+  total_sucess = true
+  status = 'Done';
+
+  /* Build tests array */
+  for (var i = 0; i < tests.length;) {
+    if(!tests[i]) {
+       tests.splice(i, 1);
+    }
+    else {
+      success = false
+      /* Obtain judge result and test name */
+      tests[i] = tests[i].replace('test case', '').replace('[', '').replace(']','').split('  ')
+
+      /* Build test's json */
+      if (tests[i][0] === 'AC') {
+        success = true;
+      }
+      else {
+        total_sucess = false
+      }
+
+      sub_test_att[i] = { 'testnumber':i+1, 'result':tests[i][0], 'success':success }
+      i++;
+    }
+  }
+
+  /* Set array of tests insisde corresponding json object */
+  online_judge_submissions['submission_test_attributes'] = sub_test_att;
+  online_judge_submissions['status'] = status;
+  online_judge_submissions['success'] = total_sucess;
+
+
+  // console.log({'online_judge_submissions':online_judge_submissions})
+  ret = JSON.stringify({'online_judge_submissions':online_judge_submissions})
+  callback(ret);
 }
 
 /* Run python program

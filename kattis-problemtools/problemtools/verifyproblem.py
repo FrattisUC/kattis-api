@@ -84,15 +84,15 @@ class SubmissionResult:
         verdict = self.verdict
         details = []
 
-        if verdict == 'AC' and self.score is not None:
-            verdict += ' (%.0f)' % self.score
+        # if verdict == 'AC' and self.score is not None:
+        #     verdict += ' (%.0f)' % self.score
 
         if self.reason is not None:
             details.append(self.reason)
         #if self.verdict != 'AC' and self.testcase is not None:
             #details.append('test case: %s' % self.testcase)
         if self.runtime != -1:
-            details.append('CPU: %.2fs @ %s' % (self.runtime, self.runtime_testcase))
+            details.append('%s' % (self.runtime_testcase))
 
         if len(details) == 0:
             return verdict
@@ -1085,7 +1085,7 @@ class Submissions(ProblemAspect):
                     timelim_margin = timelim * self._problem.config.get('limits')['time_safety_margin']
 
                 #self.msg("   Slowest AC runtime: %s, setting timelim to %d secs, safety margin to %d secs" % (max_runtime, timelim, timelim_margin))
-                print("   Slowest AC runtime: %s, setting timelim to %d secs, safety margin to %d secs" % (max_runtime, timelim, timelim_margin))
+                # print("   Slowest AC runtime: %s, setting timelim to %d secs, safety margin to %d secs" % (max_runtime, timelim, timelim_margin))
             self._problem.config.get('limits')['time'] = timelim
 
         return self._check_res
@@ -1200,7 +1200,7 @@ def main():
     #print 'Loading problem %s' % os.path.basename(os.path.realpath(args.problemdir))
     with Problem(args.problemdir) as prob:
         [errors, warnings] = prob.check(args)
-        print "%s tested: %d errors, %d warnings" % (prob.shortname, errors, warnings)
+        # print "%s tested: %d errors, %d warnings" % (prob.shortname, errors, warnings)
 
     sys.stdout.close()
     sys.exit(1 if errors > 0 else 0)
