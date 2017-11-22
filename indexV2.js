@@ -196,13 +196,13 @@ function process_data(data, callback) {
   }
 
   /* Set array of tests insisde corresponding json object */
-  online_judge_submissions['submission_test_attributes'] = sub_test_att;
+  online_judge_submissions['submission_tests_attributes'] = sub_test_att;
   online_judge_submissions['status'] = status;
   online_judge_submissions['success'] = total_sucess;
 
 
   // console.log({'online_judge_submissions':online_judge_submissions})
-  ret = JSON.stringify({'online_judge_submissions':online_judge_submissions})
+  ret = {'online_judge_submission':online_judge_submissions}
   callback(ret);
 }
 
