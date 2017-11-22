@@ -128,14 +128,14 @@ function http_request(port, subID, address, problemName, auth_token, callback) {
 
   /* https://nodejs.org/docs/latest/api/fs.html#fs_fs_watch_filename_options_listener */
   var filename = ''
-  const testFolder = './Results'
+  let testFolder = './Results'
   // console.log("bloop2")
   fs.watch('./Results', (eventType, filename) => {
     // console.log(`event type is: ${eventType}`);
 
     if(eventType=='change' && filename) {
 
-      console.log('Reading ' + filename);
+      // console.log('Reading ' + filename);
 
       fs.readFile('./Results/'+filename, 'utf8', function (err,data) {
         if (err) {
@@ -164,7 +164,6 @@ function http_request(port, subID, address, problemName, auth_token, callback) {
 }
 
 function process_data(data, callback) {
-  console.log('Processing');
   tests = data.split('\n');
   online_judge_submissions = {};
   sub_test_att = {};
@@ -210,16 +209,16 @@ function process_data(data, callback) {
 /* Run python program
 */
 function run_program(path, script_name, problemName, callback) {
-    console.log('Running')
+    // console.log(path)
     if (!fs.existsSync(path+'/submissions')) {
       fs.mkdirSync(path+'/submissions');
     }
 
     const cp = require('child_process');
-    console.log('python ' + prefixDir + verificationScript + ' ' + problemName + ' -s ' + script_name);
+    // console.log('python ' + prefixDir + verificationScript + ' ' + problemName + ' -s ' + script_name);
     cp.exec('python ' + prefixDir + verificationScript + ' ' + problemName + ' -s ' + script_name);
 
-    console.log('Finished running script');
+    // console.log('Finished running script');
 
     callback();
 }
