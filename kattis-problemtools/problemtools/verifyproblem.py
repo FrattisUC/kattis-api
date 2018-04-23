@@ -99,7 +99,6 @@ class SubmissionResult:
         return '%s [%s]' % (verdict, ', '.join(details))
 
 
-
 class VerifyError(Exception):
     pass
 
