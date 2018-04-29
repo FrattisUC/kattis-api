@@ -656,7 +656,6 @@ _JUNK_CASES = [
     ('a random text file with printable characters', ''.join(random.choice(string.printable) for _ in range(200))),
 ]
 
-
 class InputFormatValidators(ProblemAspect):
 
     def __init__(self, problem):
@@ -1132,7 +1131,6 @@ class Problem(ProblemAspect):
         ProblemAspect.warnings = 0
         ProblemAspect.bail_on_error = args.bail_on_error
         ProblemAspect.consider_warnings_errors = args.werror
-
         try:
             part_mapping = {'config': [self.config],
                             'statement': [self.statement],
@@ -1143,16 +1141,16 @@ class Problem(ProblemAspect):
 
             if not re.match('^[a-z0-9]+$', self.shortname):
                 self.error("Invalid shortname '%s' (must be [a-z0-9]+)" % self.shortname)
-
             run.limit.check_limit_capabilities(self)
-
             for part in args.parts:
+                print "Checking", part
                 self.info('Checking %s' % part)
                 for item in part_mapping[part]:
                     if part == 'statement':
                         pass
                     else:
                         item.check(args)
+                        print "after check"
         except VerifyError:
             pass
         return [ProblemAspect.errors, ProblemAspect.warnings]
@@ -1195,12 +1193,11 @@ def main():
     logging.basicConfig(stream=sys.stdout,
                         format=fmt,
                         level=eval("logging." + args.loglevel.upper()))
-
-    #print 'Loading problem %s' % os.path.basename(os.path.realpath(args.problemdir))
+    print "\nHai\n"
     with Problem(args.problemdir) as prob:
         [errors, warnings] = prob.check(args)
         # print "%s tested: %d errors, %d warnings" % (prob.shortname, errors, warnings)
-
+    print "\nHai\n"
     sys.stdout.close()
     sys.exit(1 if errors > 0 else 0)
 
