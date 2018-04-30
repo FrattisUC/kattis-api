@@ -43,56 +43,19 @@ class SubmissionResult:
         self.ac_runtime = -1.0
         self.ac_runtime_testcase = None
 
-    #Calls GRADE
-    @staticmethod
-    def aggregate_results(self, sub_results, policy, grade=None, testcase=None):
-        res = SubmissionResult(None)
-
-        for r in sub_results:
-            if r.runtime > res.runtime:
-                res.runtime = r.runtime
-                res.runtime_testcase = r.runtime_testcase
-            if r.ac_runtime > res.ac_runtime:
-                res.ac_runtime = r.ac_runtime
-                res.ac_runtime_testcase = r.ac_runtime_testcase
-
-        verdict_value = {'JE': -1, 'CE': 0, 'TLE': 1, 'RTE': 2, 'WA': 3, 'AC': 4}
-
-        rejection = next((r for r in sub_results if r.verdict == 'JE'), None)
-        if rejection is None:
-            if policy == 'first_error':
-                rejection = next((r for r in sub_results if r.verdict != 'AC'), None)
-            elif policy == 'worst_error':
-                rejection = min(sub_results, key=lambda r: verdict_value[r.verdict])
-            # else policy is '' and we should grade the results
-            else:
-                grade = lambda x: self._problem.graders.grade(x, self, testcase = testcase)
-
-        if rejection is None:
-            if grade is not None:
-                (res.verdict, res.score) = grade(sub_results)
-            else:
-                res.verdict = 'AC'
-        else:
-            res.verdict = rejection.verdict
-            res.reason = rejection.reason
-            res.testcase = rejection.testcase
-
-        return res
-
     def __str__(self):
         verdict = self.verdict
         details = []
 
-        # if verdict == 'AC' and self.score is not None:
-        #     verdict += ' (%.0f)' % self.score
+        if verdict == 'AC' and self.score is not None:
+            verdict += ' (%.0f)' % self.score
 
         if self.reason is not None:
             details.append(self.reason)
-        #if self.verdict != 'AC' and self.testcase is not None:
-            #details.append('test case: %s' % self.testcase)
+        if self.verdict != 'AC' and self.testcase is not None:
+            details.append('test case: %s' % self.testcase)
         if self.runtime != -1:
-            details.append('%s' % (self.runtime_testcase))
+            details.append('CPU: %.2fs @ %s' % (self.runtime, self.runtime_testcase))
 
         if len(details) == 0:
             return verdict
@@ -184,29 +147,30 @@ class TestCase(ProblemAspect):
 
     def run_submission(self, sub, args, timelim_low=1000, timelim_high=1000):
         outfile = os.path.join(self._problem.tmpdir, 'output')
-        #if sys.stdout.isatty():
-        #    msg = 'Running %s on %s...' % (sub, self)
-        #    sys.stdout.write('%s' % msg)
-        #    sys.stdout.flush()
-        #self.msg('Running %s on %s...' % (sub, self))
-        testcase = str(self)
+        if sys.stdout.isatty():
+            msg = 'Running %s on %s...' % (sub, self)
+            sys.stdout.write('%s' % msg)
+            sys.stdout.flush()
+
         if self._problem.is_interactive:
             res2 = self._problem.output_validators.validate_interactive(self, sub, timelim_high, self._problem.submissions)
         else:
-            status, runtime = sub.run(self.infile, outfile, timelim=timelim_high+1)
+            status, runtime = sub.run(self.infile, outfile,
+                                      timelim=timelim_high+1,
+                                      memlim=self._problem.config.get('limits')['memory'])
             if is_TLE(status) or runtime > timelim_high:
-                res2 = SubmissionResult('TLE', score=self._problem.config.get('grading')['reject_score'])
+                res2 = SubmissionResult('TLE', score=self.testcasegroup.config['reject_score'])
             elif is_RTE(status):
-                res2 = SubmissionResult('RTE', score=self._problem.config.get('grading')['reject_score'])
+                res2 = SubmissionResult('RTE', score=self.testcasegroup.config['reject_score'])
             else:
                 res2 = self._problem.output_validators.validate(self, outfile)
             res2.runtime = runtime
-        #if sys.stdout.isatty():
-        #    sys.stdout.write('%s' % '\b' * (len(msg)))
+        if sys.stdout.isatty():
+            sys.stdout.write('%s' % '\b' * (len(msg)))
         if res2.runtime <= timelim_low:
             res1 = res2
         else:
-            res1 = SubmissionResult('TLE', score=self._problem.config.get('grading')['reject_score'])
+            res1 = SubmissionResult('TLE', score=self.testcasegroup.config['reject_score'])
         res1.testcase = res2.testcase = self
         res1.runtime_testcase = res2.runtime_testcase = self
         res1.runtime = res2.runtime
@@ -216,11 +180,8 @@ class TestCase(ProblemAspect):
         if res2.verdict == 'AC':
             res2.ac_runtime = res2.runtime
             res2.ac_runtime_testcase = res2.runtime_testcase
-        #MAIN PRINT
-        #self.msg('Test file result: %s)' % (res1))
-        #self.msg('%s' % (res1))
-        print('%s' % (res1))
-        return (res1, res2, testcase)
+        self.info('Test file result: %s)' % (res1))
+        return (res1, res2)
 
     def get_all_testcases(self):
         return [self]
@@ -233,7 +194,14 @@ class TestCaseGroup(ProblemAspect):
     _DEFAULT_CONFIG = {'grading': 'default',
                        'grader_flags': '',
                        'input_validator_flags': '',
-                       'output_validator_flags': ''}
+                       'output_validator_flags': '',
+                       'on_reject': 'break',
+                       'accept_score': 1.0,
+                       'reject_score': 0.0,
+                       'range': '-inf +inf'
+   }
+
+    _SCORING_ONLY_KEYS = ['accept_score', 'reject_score', 'range']
 
     def __init__(self, problem, datadir, parent=None):
         self._parent = parent
@@ -247,13 +215,34 @@ class TestCaseGroup(ProblemAspect):
             except Exception as e:
                 self.error(e)
                 self.config = {}
-        elif parent is not None:
-            self.config = parent.config.copy()
         else:
             self.config = {}
 
+        # For non-root groups, missing properties are inherited from the parent group
+        if parent:
+            for field, parent_value in parent.config.iteritems():
+                if not field in self.config:
+                    self.config[field] = parent_value
+
+        # Some deprecated properties are inherited from problem config during a transition period
+        problem_grading = problem.config.get('grading')
+        for key in ['accept_score', 'reject_score', 'range']:
+            if key in problem.config.get('grading'):
+                self.config[key] = problem_grading[key]
+
+        problem_on_reject = problem_grading.get('on_reject')
+        if problem_on_reject == 'first_error':
+            self.config['on_reject'] = 'break'
+        if problem_on_reject == 'grade':
+            self.config['on_reject'] = 'continue'
+
+        if self._problem.config.get('type') == 'pass-fail':
+            for key in TestCaseGroup._SCORING_ONLY_KEYS:
+                if key not in self.config:
+                    self.config[key] = None
+
         for field, default in TestCaseGroup._DEFAULT_CONFIG.iteritems():
-            if not field in self.config:
+            if field not in self.config:
                 self.config[field] = default
 
         self._items = []
@@ -312,6 +301,26 @@ class TestCaseGroup(ProblemAspect):
             if field not in TestCaseGroup._DEFAULT_CONFIG.keys():
                 self.warning("Unknown key '%s' in '%s'" % (field, os.path.join(self._datadir, 'testdata.yaml')))
 
+        if self._problem.config.get('type') == 'pass-fail':
+            for key in TestCaseGroup._SCORING_ONLY_KEYS:
+                if self.config.get(key) is not None:
+                    self.error("Key '%s' is only applicable for scoring problems, this is a pass-fail problem" % key)
+
+        if not self.config['on_reject'] in ['break', 'continue']:
+            self.error("Invalid value '%s' for on_reject policy" % self.config['on_reject'])
+
+        if self._problem.config.get('type') == 'scoring':
+            # Check grading
+            try:
+                score_range = self.config['range']
+                (min_score, max_score) = map(float, score_range.split())
+                if min_score >= max_score:
+                    self.error("Invalid score range '%s': minimum score must be smaller than maximum score" % score_range)
+            except VerifyError:
+                raise
+            except:
+                self.error("Invalid format '%s' for range: must be exactly two floats" % score_range)
+
         infiles = glob.glob(os.path.join(self._datadir, '*.in'))
         ansfiles = glob.glob(os.path.join(self._datadir, '*.ans'))
 
@@ -362,33 +371,46 @@ class TestCaseGroup(ProblemAspect):
 
         return self._check_res
 
-    #Calls GRADE
-    def compute_result(self, sub_results, probtype, on_reject, testcase, shadow_result=False):
-        grade = None
-        if probtype == 'scoring':
-            grade = lambda x: self._problem.graders.grade(x, self, shadow_result)
-        return SubmissionResult.aggregate_results(self, sub_results, on_reject, grade=grade, testcase=testcase)
 
-    #Not this one!
     def run_submission(self, sub, args, timelim_low, timelim_high):
-        #self.msg('Running on %s' % self)
+        self.info('Running on %s' % self)
         subres1 = []
         subres2 = []
-        probtype = self._problem.config.get('type')
-        on_reject = self._problem.config.get('grading')['on_reject']
-        testcase = ''
+        on_reject = self.config['on_reject']
         for subdata in self._items:
             if not subdata.matches_filter(args.data_filter):
                 continue
-            (r1, r2, testcase) = subdata.run_submission(sub, args, timelim_low, timelim_high)
-            #self.msg('subres1 %s and subres2 %s'%(r1,r2))
+            (r1, r2) = subdata.run_submission(sub, args, timelim_low, timelim_high)
             subres1.append(r1)
             subres2.append(r2)
-            comp1 = self.compute_result(subres1, probtype, on_reject, testcase=testcase)
-            comp2 = self.compute_result(subres2, probtype, on_reject, testcase=testcase, shadow_result=True)
-            if on_reject == 'first_error' and r2.verdict != 'AC':
+            if on_reject == 'break' and r2.verdict != 'AC':
                 break
-        return (comp1,comp2, testcase)
+        return (self.aggregate_results(subres1),
+                self.aggregate_results(subres2, shadow_result=True))
+
+    def aggregate_results(self, sub_results, shadow_result=False):
+        res = SubmissionResult(None)
+
+        for r in sub_results:
+            if r.runtime > res.runtime:
+                res.runtime = r.runtime
+                res.runtime_testcase = r.runtime_testcase
+            if r.ac_runtime > res.ac_runtime:
+                res.ac_runtime = r.ac_runtime
+                res.ac_runtime_testcase = r.ac_runtime_testcase
+
+        judge_error = next((r for r in sub_results if r.verdict == 'JE'), None)
+        if judge_error:
+            res.verdict = judge_error.verdict
+            res.reason = judge_error.reason
+            res.testcase = judge_error.testcase
+        else:
+            (res.verdict, score) = self._problem.graders.grade(sub_results, self, shadow_result)
+            if self._problem.config.get('type') == 'scoring':
+                res.score = score
+            res.testcase = sub_results[-1].testcase if sub_results else None
+        return res
+
 
     def all_datasets(self):
         res = []
@@ -401,7 +423,7 @@ class ProblemConfig(ProblemAspect):
     _MANDATORY_CONFIG = ['name']
     _OPTIONAL_CONFIG = {
         'uuid': '',
-        'type': 'scoring',
+        'type': 'pass-fail',
         'author': '',
         'source': '',
         'source_url': '',
@@ -418,15 +440,12 @@ class ProblemConfig(ProblemAspect):
                    'validation_output': 8},
         'validation': 'default',
         'validator_flags': '',
-        'grading': {'on_reject': 'grade',
-                    'accept_score': 7.0,
-                    'reject_score': 1.0,
-                    'objective': 'max',
-                    'range': '-inf +inf'},
+        'grading': {
+            'objective': 'max',
+        },
         'libraries': '',
         'languages': ''
         }
-
     _VALID_LICENSES = ['unknown', 'public domain', 'cc0', 'cc by', 'cc by-sa', 'educational', 'permission']
 
     def __init__(self, problem):
@@ -445,7 +464,7 @@ class ProblemConfig(ProblemAspect):
                 self.error(e)
 
         # Add config items from problem statement e.g. name
-        #self._data.update(problem.statement.get_config())
+        self._data.update(problem.statement.get_config())
 
         # Populate rights_owner unless license is public domain
         if 'rights_owner' not in self._data and self._data.get('license') != 'public domain':
@@ -472,10 +491,6 @@ class ProblemConfig(ProblemAspect):
         val = self._data['validation'].split()
         self._data['validation-type'] = val[0]
         self._data['validation-params'] = val[1:]
-
-        if self._data['type'] == 'pass-fail':
-            self._data['grading']['accept_score'] = None
-            self._data['grading']['reject_score'] = None
 
         self._data['grading']['custom_scoring'] = False
         for param in self._data['validation-params']:
@@ -534,11 +549,15 @@ class ProblemConfig(ProblemAspect):
         elif self._data['license'] == 'unknown':
             self.warning("License is 'unknown'")
 
-        if not self._data['grading']['on_reject'] in ['first_error', 'worst_error', 'grade']:
-            self.error("Invalid value '%s' for on_reject policy" % self._data['grading']['on_reject'])
+        if 'on_reject' in self._data['grading']:
+            if self._data['type'] == 'pass-fail' and self._data['grading']['on_reject'] == 'grade':
+                self.error("Invalid on_reject policy '%s' for problem type '%s'" % (self._data['grading']['on_reject'], self._data['type']))
+            if not self._data['grading']['on_reject'] in ['first_error', 'worst_error', 'grade']:
+                self.error("Invalid value '%s' for on_reject policy" % self._data['grading']['on_reject'])
 
-        if self._data['type'] == 'pass-fail' and self._data['grading']['on_reject'] == 'grade':
-            self.error("Invalid on_reject policy '%s' for problem type '%s'" % (self._data['grading']['on_reject'], self._data['type']))
+        for deprecated_grading_key in ['accept_score', 'reject_score', 'range', 'on_reject']:
+            if deprecated_grading_key in self._data['grading']:
+                self.warning("Grading key '%s' is deprecated in problem.yaml, use '%s' in testdata.yaml instead" % (deprecated_grading_key, deprecated_grading_key))
 
         if not self._data['validation-type'] in ['default', 'custom']:
             self.error("Invalid value '%s' for validation, first word must be 'default' or 'custom'" % self._data['validation'])
@@ -556,20 +575,7 @@ class ProblemConfig(ProblemAspect):
             self.error('Limits key in problem.yaml must specify a dict')
             self._data['limits'] = ProblemConfig._OPTIONAL_CONFIG['limits']
 
-        # Check grading
-        try:
-            score_range = self._data['grading']['range']
-            (min_score, max_score) = map(float, score_range.split())
-            if min_score >= max_score:
-                self.error("Invalid score range '%s': minimum score must be smaller than maximum score" % score_range)
-        except VerifyError:
-            raise
-        except:
-            self.error("Invalid format '%s' for grading.range: must be exactly two floats" % score_range)
-
         # Some things not yet implemented
-        if self._data['grading']['on_reject'] == 'worst_error':
-            self.error("'on_reject: worst_error' not yet supported")
         if self._data['libraries'] != '':
             self.error("Libraries not yet supported")
         if self._data['languages'] != '':
@@ -650,6 +656,40 @@ class ProblemStatement(ProblemAspect):
         return ret
 
 
+class Attachments(ProblemAspect):
+    """Represents the attachments of a problem.
+
+    Attributes:
+        attachments: The absolute paths to the attachment files for this problem.
+
+    """
+
+    def __init__(self, problem):
+        attachments_path = os.path.join(problem.probdir, 'attachments')
+        if os.path.isdir(attachments_path):
+            self.attachments = [os.path.join(attachments_path, attachment_name) for attachment_name in os.listdir(attachments_path)]
+        else:
+            self.attachments = []
+        self.debug('Adding attachments %s' % str(self.attachments))
+
+    def check(self, args):
+        if self._check_res is not None:
+            return self._check_res
+        self._check_res = True
+
+        for attachment_path in self.attachments:
+            if os.path.isdir(attachment_path):
+                self.error('Directories are not allowed as attachments (%s is a directory)' % attachment_path)
+
+        return self._check_res
+
+    def get_attachment_paths(self):
+        return self.attachments
+
+    def __str__(self):
+        return 'attachments'
+
+
 _JUNK_CASES = [
     ('an empty file', ''),
     ('a binary file with byte values 0 up to 256', ''.join(chr(x) for x in range(256))),
@@ -657,6 +697,17 @@ _JUNK_CASES = [
     ('a random text file with printable characters', ''.join(random.choice(string.printable) for _ in range(200))),
 ]
 
+def _build_junk_modifier(desc, pattern, repl):
+    p = re.compile(pattern)
+    return (desc, p.search, lambda text: p.sub(repl, text))
+
+_JUNK_MODIFICATIONS = [
+    _build_junk_modifier('spaces added where there already is whitespace', r'\s', lambda m: m.group(0) + ' ' * random.randint(1, 5)),
+    _build_junk_modifier('newlines added where there already are newlines', '\n', lambda m: '\n' * random.randint(2, 5)),
+    _build_junk_modifier('leading zeros added to integers', r'(^|[^.]\b)([0-9]+)\b', r'\g<1>0000000000\g<2>'),
+    _build_junk_modifier('trailing zeros added to real number decimal portion', r'\.[0-9]+\b', r'\g<0>0000000000'),
+    ('random junk added to the end of the file', lambda f: True, lambda f: f + ''.join(random.choice(string.printable) for _ in range(200))),
+]
 
 class InputFormatValidators(ProblemAspect):
 
@@ -712,6 +763,36 @@ class InputFormatValidators(ProblemAspect):
                             break
                     else:
                         self.warning('No validator rejects %s with flags "%s"' % (desc, ' '.join(flags)))
+
+            def modified_input_validates(applicable, modifier):
+                for testcase in self._problem.testdata.get_all_testcases():
+                    with open(testcase.infile) as infile:
+                        infile = infile.read()
+                    if not applicable(infile):
+                        continue
+
+                    with open(file_name, "wb") as f:
+                        f.write(modifier(infile))
+
+                    for flags in all_flags:
+                        flags = flags.split()
+                        for val in self._validators:
+                            status, _ = val.run(file_name, args=flags)
+                            if os.WEXITSTATUS(status) != 42:
+                                # expected behavior; validator rejects modified input
+                                return False
+
+                    # we found a file we could modify, and all validators
+                    # accepted the modifications
+                    return True
+
+                # no files were modifiable
+                return False
+
+            for (desc, applicable, modifier) in _JUNK_MODIFICATIONS:
+                if modified_input_validates(applicable, modifier):
+                    self.warning('No validator rejects %s' % (desc,))
+
             os.unlink(file_name)
 
         return self._check_res
@@ -753,20 +834,21 @@ class Graders(ProblemAspect):
                 self.error('Compile error for %s' % grader)
         return self._check_res
 
-    def grade(self, sub_results, testcasegroup, shadow_result=False, testcase=None):
+    def grade(self, sub_results, testcasegroup, shadow_result=False):
 
         if testcasegroup.config['grading'] == 'default':
             graders = [self._default_grader]
         else:
             graders = self._graders
 
-        grader_input = ''.join(['%s %s\n' % (r.verdict, r.score) for r in sub_results])
+        grader_input = ''.join(['%s %s\n' % (r.verdict, 0 if r.score is None else r.score) for r in sub_results])
         grader_output_re = r'^((AC)|(WA)|(TLE)|(RTE))\s+[0-9.]+\s*$'
         verdict = 'AC'
         score = 0
-        #self.msg('\n\n======================')
-        #self.msg('Grading %s:\n%s' % (testcase, grader_input))
-        #self.msg('Grader flags: %s' % (testcasegroup.config.get('grader_flags')))
+
+        grader_flags = testcasegroup.config['grader_flags'].split()
+        self.debug('Grading %d results:\n%s' % (len(sub_results), grader_input))
+        self.debug('Grader flags: %s' % grader_flags)
 
         for grader in graders:
             if grader is not None and grader.compile():
@@ -778,28 +860,34 @@ class Graders(ProblemAspect):
                 open(infile, 'w').write(grader_input)
 
                 status, runtime = grader.run(infile, outfile,
-                                             args=testcasegroup.config.get('grader_flags').split())
+                                             args=grader_flags)
 
                 grader_output = open(outfile, 'r').read()
                 os.remove(infile)
                 os.remove(outfile)
                 if not os.WIFEXITED(status):
-                    self.info('Judge error: %s crashed' % grader)
-                    self.info('Grader input:\n%s' % grader_input)
-                    return SubmissionResult('JE', score=0.0)
+                    self.error('Judge error: %s crashed' % grader)
+                    self.debug('Grader input:\n%s' % grader_input)
+                    return ('JE', 0.0)
+#                ret = os.WEXITSTATUS(status)
+#                if ret != 42:
+#                    self.error('Judge error: exit code %d for grader %s' % (ret, grader))
+#                    self.debug('Grader input: %s\n' % grader_input)
+#                    return SubmissionResult('JE', 0.0)
+
                 if not re.match(grader_output_re, grader_output):
-                    self.info('Judge error: invalid format of grader output')
-                    self.info('Output must match: "%s"' % grader_output_re)
-                    self.info('Output was: "%s"' % grader_output)
-                    return SubmissionResult('JE', score=0.0)
+                    self.error('Judge error: invalid format of grader output')
+                    self.debug('Output must match: "%s"' % grader_output_re)
+                    self.debug('Output was: "%s"' % grader_output)
+                    return ('JE', 0.0)
 
                 verdict, score = grader_output.split()
                 score = float(score)
         # TODO: check that all graders give same result
 
-        #if not shadow_result:
-            #self.msg('Grade on %s is %s (%s)' % (testcase, verdict, score))
-            #self.msg('======================\n\n')
+        if not shadow_result:
+            self.info('Grade on %s is %s (%s)' % (testcasegroup, verdict, score))
+
         return (verdict, score)
 
 
@@ -862,7 +950,7 @@ class OutputValidators(ProblemAspect):
         return self._check_res
 
 
-    def _parse_validator_results(self, val, status, feedbackdir):
+    def _parse_validator_results(self, val, status, feedbackdir, testcase):
         custom_score = self._problem.config.get('grading')['custom_scoring']
         score = None
         # TODO: would be good to have some way of displaying the feedback for debugging uses
@@ -887,10 +975,10 @@ class OutputValidators(ProblemAspect):
 
         if ret == 43:
             if score is None:
-                score = self._problem.config.get('grading')['reject_score']
+                score = testcase.testcasegroup.config['reject_score']
             return SubmissionResult('WA', score=score)
         if score is None:
-            score = self._problem.config.get('grading')['accept_score']
+            score = testcase.testcasegroup.config['accept_score']
         return SubmissionResult('AC', score=score)
 
 
@@ -911,7 +999,10 @@ class OutputValidators(ProblemAspect):
         # file descriptor, wall time lim
         initargs = ['1', str(2 * timelim)]
         validator_args = [testcase.infile, testcase.ansfile, '<feedbackdir>']
-        submission_args = submission.get_runcmd()
+        submission_args = submission.get_runcmd(memlim=self._problem.config.get('limits')['memory'])
+
+        val_timelim = self._problem.config.get('limits')['validation_time']
+        val_memlim = self._problem.config.get('limits')['validation_memory']
         for val in self._actual_validators():
             if val is not None and val.compile():
                 feedbackdir = tempfile.mkdtemp(prefix='feedback', dir=self._problem.tmpdir)
@@ -920,7 +1011,7 @@ class OutputValidators(ProblemAspect):
                 interactive_out = f.name
                 f.close()
                 i_status, _ = interactive.run(outfile=interactive_out,
-                                                      args=initargs + val.get_runcmd() + validator_args + [';'] + submission_args)
+                                              args=initargs + val.get_runcmd(memlim=val_memlim) + validator_args + [';'] + submission_args)
                 if is_RTE(i_status):
                     errorhandler.error('Interactive crashed, status %d' % i_status)
                 else:
@@ -935,11 +1026,11 @@ class OutputValidators(ProblemAspect):
                         val_status = int(val_status)
 
                         if is_TLE(sub_status, True):
-                            res = SubmissionResult('TLE', score=self._problem.config.get('grading')['reject_score'])
+                            res = SubmissionResult('TLE', score=testcase.testcasegroup.config['reject_score'])
                         elif is_RTE(sub_status):
-                            res = SubmissionResult('RTE', score=self._problem.config.get('grading')['reject_score'])
+                            res = SubmissionResult('RTE', score=testcase.testcasegroup.config['reject_score'])
                         else:
-                            res = self._parse_validator_results(val, val_status, feedbackdir)
+                            res = self._parse_validator_results(val, val_status, feedbackdir, testcase)
 
                         res.runtime = sub_runtime
 
@@ -953,13 +1044,16 @@ class OutputValidators(ProblemAspect):
 
     def validate(self, testcase, submission_output):
         res = SubmissionResult('JE')
+        val_timelim = self._problem.config.get('limits')['validation_time']
+        val_memlim = self._problem.config.get('limits')['validation_memory']
+        flags = self._problem.config.get('validator_flags').split() + testcase.testcasegroup.config['output_validator_flags'].split()
         for val in self._actual_validators():
             if val is not None and val.compile():
                 feedbackdir = tempfile.mkdtemp(prefix='feedback', dir=self._problem.tmpdir)
                 status, runtime = val.run(submission_output,
-                                          args=[testcase.infile, testcase.ansfile, feedbackdir] + self._problem.config.get('validator_flags').split() + testcase.testcasegroup.config['output_validator_flags'].split())
-
-                res = self._parse_validator_results(val, status, feedbackdir)
+                                          args=[testcase.infile, testcase.ansfile, feedbackdir] + flags,
+                                          timelim=val_timelim, memlim=val_memlim)
+                res = self._parse_validator_results(val, status, feedbackdir, testcase)
                 shutil.rmtree(feedbackdir)
                 if res.verdict != 'AC':
                     return res
@@ -977,7 +1071,6 @@ class Submissions(ProblemAspect):
         ['TLE', 'time_limit_exceeded', False],
         ]
 
-    ## Runs programs and returns veredict
     def __init__(self, problem):
         self._submissions = {}
         self._problem = problem
@@ -995,37 +1088,17 @@ class Submissions(ProblemAspect):
         return 'submissions'
 
     def check_submission(self, sub, args, expected_verdict, timelim_low, timelim_high):
-        sub_name = str(sub).split('.py')
-        dir_path = os.path.dirname(os.path.realpath(__file__))
+        (result1, result2) = self._problem.testdata.run_submission(sub, args, timelim_low, timelim_high)
 
-        directory = 'Results'
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-        sys.stdout = open('Results/out_%s' % (sub_name[0]), 'w+');
-        # f = open('Results/out_%s' % (sub_name[0]), 'w+')
-        # print('hi there\n')  # python will convert \n to os.linesep
-        # print('Running submission %s' % (sub))
-
-        (result1, result2, testcase) = self._problem.testdata.run_submission(sub, args, timelim_low, timelim_high)
         if result1.verdict != result2.verdict:
             self.warning('%s submission %s sensitive to time limit: limit of %s secs -> %s, limit of %s secs -> %s' % (expected_verdict, sub, timelim_low, result1.verdict, timelim_high, result2.verdict))
 
         if result1.verdict == expected_verdict:
-            self.info('%s submission %s OK: %s' % (expected_verdict, sub, result1))
+            self.msg('   %s submission %s OK: %s' % (expected_verdict, sub, result1))
         elif result2.verdict == expected_verdict:
-            self.warning('%s submission %s OK with extra time: %s' % (expected_verdict, sub, result2))
+            self.msg('   %s submission %s OK with extra time: %s' % (expected_verdict, sub, result2))
         else:
             self.error('%s submission %s got %s' % (expected_verdict, sub, result1))
-        # if result1.verdict == expected_verdict:
-        #     f.write('%s submission %s OK: %s' % (expected_verdict, sub, result1))
-        # elif result2.verdict == expected_verdict:
-        #     f.write('%s submission %s OK with extra time: %s' % (expected_verdict, sub, result2))
-        # else:
-        #     f.write('%s submission %s got %s' % (expected_verdict, sub, result1))
-
-        self.msg('\n')
-        # f.write('\n')
-        # f.close()
         return result1
 
     def check(self, args):
@@ -1033,18 +1106,13 @@ class Submissions(ProblemAspect):
             return self._check_res
         self._check_res = True
 
-        ##INTERESTING!! About time limits
-
         timelim_margin = 300  # 5 minutes
         timelim = 300
-        #If this config exists, overwrites timelim
         if 'time_for_AC_submissions' in self._problem.config.get('limits'):
             timelim = timelim_margin = self._problem.config.get('limits')['time_for_AC_submissions']
-
         if args.fixed_timelim is not None:
             timelim = args.fixed_timelim
             timelim_margin = timelim * self._problem.config.get('limits')['time_safety_margin']
-
 
         for verdict in Submissions._VERDICTS:
             acr = verdict[0]
@@ -1052,6 +1120,7 @@ class Submissions(ProblemAspect):
                 self.error('Require at least one "%s" submission' % verdict[1])
 
             runtimes = []
+
             for sub in self._submissions[acr]:
                 if args.submission_filter.search(os.path.join(verdict[1], sub.name)):
                     self.info('Check %s submission %s' % (acr, sub))
@@ -1060,14 +1129,9 @@ class Submissions(ProblemAspect):
                         self.error('Compile error for %s submission %s' % (acr, sub))
                         continue
 
-                    ## sub: aux var for _submissions
-                    ## args: parameter of the method
-                    ## acr: expected veredict
-                    ## timelim & timelim_margin: defined above
                     res = self.check_submission(sub, args, acr, timelim, timelim_margin)
                     runtimes.append(res.runtime)
 
-            ## Statistics about the solutions
             if acr == 'AC':
                 if len(runtimes) > 0:
                     max_runtime = max(runtimes)
@@ -1079,13 +1143,11 @@ class Submissions(ProblemAspect):
                 else:
                     max_runtime = None
                 if args.fixed_timelim is not None and args.fixed_timelim != timelim:
-                    #self.msg("   Solutions give timelim of %d seconds, but will use provided fixed limit of %d seconds instead" % (timelim, args.fixed_timelim))
-                    print("   Solutions give timelim of %d seconds, but will use provided fixed limit of %d seconds instead" % (timelim, args.fixed_timelim))
+                    self.msg("   Solutions give timelim of %d seconds, but will use provided fixed limit of %d seconds instead" % (timelim, args.fixed_timelim))
                     timelim = args.fixed_timelim
                     timelim_margin = timelim * self._problem.config.get('limits')['time_safety_margin']
 
-                #self.msg("   Slowest AC runtime: %s, setting timelim to %d secs, safety margin to %d secs" % (max_runtime, timelim, timelim_margin))
-                # print("   Slowest AC runtime: %s, setting timelim to %d secs, safety margin to %d secs" % (max_runtime, timelim, timelim_margin))
+                self.msg("   Slowest AC runtime: %s, setting timelim to %d secs, safety margin to %d secs" % (max_runtime, timelim, timelim_margin))
             self._problem.config.get('limits')['time'] = timelim
 
         return self._check_res
@@ -1107,7 +1169,7 @@ class Problem(ProblemAspect):
             return self
 
         self.statement = ProblemStatement(self)
-
+        self.attachments = Attachments(self)
         self.config = ProblemConfig(self)
         self.is_interactive = 'interactive' in self.config.get('validation-params')
         self.input_format_validators = InputFormatValidators(self)
@@ -1136,7 +1198,7 @@ class Problem(ProblemAspect):
 
         try:
             part_mapping = {'config': [self.config],
-                            'statement': [self.statement],
+                            'statement': [self.statement, self.attachments],
                             'validators': [self.input_format_validators, self.output_validators],
                             'graders': [self.graders],
                             'data': [self.testdata],
@@ -1148,12 +1210,9 @@ class Problem(ProblemAspect):
             run.limit.check_limit_capabilities(self)
 
             for part in args.parts:
-                self.info('Checking %s' % part)
+                self.msg('Checking %s' % part)
                 for item in part_mapping[part]:
-                    if part == 'statement':
-                        pass
-                    else:
-                        item.check(args)
+                    item.check(args)
         except VerifyError:
             pass
         return [ProblemAspect.errors, ProblemAspect.warnings]
@@ -1197,12 +1256,11 @@ def main():
                         format=fmt,
                         level=eval("logging." + args.loglevel.upper()))
 
-    #print 'Loading problem %s' % os.path.basename(os.path.realpath(args.problemdir))
+    print 'Loading problem %s' % os.path.basename(os.path.realpath(args.problemdir))
     with Problem(args.problemdir) as prob:
         [errors, warnings] = prob.check(args)
-        # print "%s tested: %d errors, %d warnings" % (prob.shortname, errors, warnings)
+        print "%s tested: %d errors, %d warnings" % (prob.shortname, errors, warnings)
 
-    sys.stdout.close()
     sys.exit(1 if errors > 0 else 0)
 
 if __name__ == '__main__':

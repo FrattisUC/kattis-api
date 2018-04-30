@@ -1,3 +1,88 @@
+kattis-problemtools (1.20180426) artful; urgency=medium
+
+  [ Per Austrin ]
+  * fix verifyproblem bug causing crash on empty problem groups
+
+  [ Greg Hamerly ]
+  * Add several tests on input validators.
+  * Fixes based on Per's feedback
+  * Remove duplication of pattern matching regexes
+  * Fix bug where we don't actually add more newlines
+  * Always add at least one space
+
+  [ Simon Lindholm ]
+  * Use C++14
+
+  [ Per Austrin ]
+  * add missing dependency to debian control file
+
+ -- Per Austrin <austrin@kattis.com>  Thu, 26 Apr 2018 19:19:15 +0200
+
+kattis-problemtools (1.20170420) xenial; urgency=medium
+
+  [ Johan Sannemo ]
+  * Add support for new grading settings.
+
+  [ Per Austrin ]
+
+ -- Per Austrin <austrin@kattis.com>  Thu, 20 Apr 2017 19:55:56 +0200
+
+kattis-problemtools (1.20170408) xenial; urgency=medium
+
+  [ Simon Lindholm ]
+  * Support floats in .timelimit
+
+  [ Per Austrin ]
+  * switch checktestdata to release branch
+  * update installation instructions to clarify that repository needs to be cloned
+  * clarify build dependencies
+  * fix formatting
+
+  [ austrin ]
+  * Really fix formatting.
+
+  [ Per Austrin ]
+  * enforce memory limit (via rlimit) for submissions
+  * example submission breaking memory limit
+  * add Scala to languages.yaml
+  * apply time and memory limit to output validators for standard problems (for interactive problems, time and memory limits are not applied correctly)
+  * fix snafus in memory limit capability check
+
+  [ Johan Sannemo ]
+  * Add support for Pascal
+  * Add support for attachments
+
+  [ Per Austrin ]
+
+ -- Per Austrin <austrin@kattis.com>  Sat, 08 Apr 2017 15:03:31 +0200
+
+kattis-problemtools (1.20170202) xenial; urgency=medium
+
+  [ Per Austrin ]
+  * add dh-python as deb dependency
+  * python-yaml is a build dependency since tests depend on it
+
+  [ Pehr Söderman ]
+  * Changing from dmcs to mcs to compile C#
+
+  [ Tobias Werth ]
+  * Fix pip installation instructions.
+
+  [ Robin Lee ]
+  * verifyproblem - exit 1 in case of errors
+
+  [ Per Austrin ]
+  * fix author message feedback file name in validate.h
+
+  [ Thorsten Wißmann ]
+  * Fix python2 calls and shebangs
+  * Update checktestdata to active repo
+
+  [ Per Austrin ]
+  * update release script, git-dch has changed name
+
+ -- Per Austrin <austrin@kattis.com>  Thu, 02 Feb 2017 14:02:12 +0100
+
 kattis-problemtools (1.20160728) trusty; urgency=medium
 
   * change version numbering scheme slightly

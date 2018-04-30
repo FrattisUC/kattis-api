@@ -24,7 +24,6 @@ void check_case() {
             assert(!"unknown input instructions");
         }
     }
-    
     if (value == -1) {
         judge_message("I'm not committing to a value, will adaptively choose worst one\n");
     } else {

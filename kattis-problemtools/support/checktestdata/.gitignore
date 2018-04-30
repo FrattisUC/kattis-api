@@ -1,0 +1,15 @@
+*.o
+aclocal.m4
+autom4te.cache/
+checktestdata
+config.log
+config.status
+configure
+config.mk
+checktestdata-scan.tar.xz
+coverity-scan.tar.xz
+cov-submit-data*.sh
+cov-int/
+*.gcda
+*.gcno
+coverage*.html
