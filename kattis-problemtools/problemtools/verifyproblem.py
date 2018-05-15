@@ -17,6 +17,7 @@ import random
 from argparse import ArgumentParser, ArgumentTypeError
 import problem2pdf
 import problem2html
+import json
 
 import languages
 import run
@@ -31,6 +32,10 @@ def is_TLE(status, may_signal_with_usr1=False):
 def is_RTE(status):
     return not os.WIFEXITED(status) or os.WEXITSTATUS(status)
 
+def writeFile(subName, results):
+    f = open(subName + '.txt','a+')
+    for res in results:
+        f.write(res)
 
 class SubmissionResult:
     def __init__(self, verdict, score=None, testcase=None, reason=None):
@@ -147,6 +152,9 @@ class TestCase(ProblemAspect):
 
     def run_submission(self, sub, args, timelim_low=1000, timelim_high=1000):
         outfile = os.path.join(self._problem.tmpdir, 'output')
+        print 'AQUI'
+        filename = self.strip_path_prefix(self._base).replace("/","-")
+        print filename
         if sys.stdout.isatty():
             msg = 'Running %s on %s...' % (sub, self)
             sys.stdout.write('%s' % msg)
@@ -181,6 +189,7 @@ class TestCase(ProblemAspect):
             res2.ac_runtime = res2.runtime
             res2.ac_runtime_testcase = res2.runtime_testcase
         self.info('Test file result: %s)' % (res1))
+
         return (res1, res2)
 
     def get_all_testcases(self):
@@ -195,7 +204,7 @@ class TestCaseGroup(ProblemAspect):
                        'grader_flags': '',
                        'input_validator_flags': '',
                        'output_validator_flags': '',
-                       'on_reject': 'break',
+                       'on_reject': 'continue',
                        'accept_score': 1.0,
                        'reject_score': 0.0,
                        'range': '-inf +inf'
@@ -383,6 +392,16 @@ class TestCaseGroup(ProblemAspect):
             (r1, r2) = subdata.run_submission(sub, args, timelim_low, timelim_high)
             subres1.append(r1)
             subres2.append(r2)
+            
+            ''' Aqui se escribe en el archivo'''
+            
+            print ""
+            print subdata.__str__()
+            submission1 = {'test': self._parent, 'verdict': r1.verdict, 'score': r1.score, 'problem': r1.testcase._problem.shortname, 'reason': r1.reason, 'runtime': r1.runtime, 'runtime_testcase': r1.runtime_testcase, 'ac_runtime': r1.ac_runtime, 'ac_runtime_testcase': r1.ac_runtime_testcase}
+            print submission1
+            print "---*---"
+            print ""
+            
             if on_reject == 'break' and r2.verdict != 'AC':
                 break
         return (self.aggregate_results(subres1),
@@ -409,6 +428,7 @@ class TestCaseGroup(ProblemAspect):
             if self._problem.config.get('type') == 'scoring':
                 res.score = score
             res.testcase = sub_results[-1].testcase if sub_results else None
+
         return res
 
 
@@ -1124,7 +1144,7 @@ class Submissions(ProblemAspect):
             for sub in self._submissions[acr]:
                 if args.submission_filter.search(os.path.join(verdict[1], sub.name)):
                     self.info('Check %s submission %s' % (acr, sub))
-
+                    print 'Check %s submission %s' % (acr, sub)
                     if not sub.compile():
                         self.error('Compile error for %s submission %s' % (acr, sub))
                         continue
@@ -1255,7 +1275,6 @@ def main():
     logging.basicConfig(stream=sys.stdout,
                         format=fmt,
                         level=eval("logging." + args.loglevel.upper()))
-
     print 'Loading problem %s' % os.path.basename(os.path.realpath(args.problemdir))
     with Problem(args.problemdir) as prob:
         [errors, warnings] = prob.check(args)
