@@ -152,7 +152,7 @@ class TestCase(ProblemAspect):
 
     def run_submission(self, sub, args, timelim_low=1000, timelim_high=1000):
         outfile = os.path.join(self._problem.tmpdir, 'output')
-        print 'AQUI'
+        print ''
         filename = self.strip_path_prefix(self._base).replace("/","-")
         print filename
         if sys.stdout.isatty():
@@ -399,11 +399,13 @@ class TestCaseGroup(ProblemAspect):
             print subdata.__str__()
             submission1 = {'test': self._parent, 'verdict': r1.verdict, 'score': r1.score, 'problem': r1.testcase._problem.shortname, 'reason': r1.reason, 'runtime': r1.runtime, 'runtime_testcase': r1.runtime_testcase, 'ac_runtime': r1.ac_runtime, 'ac_runtime_testcase': r1.ac_runtime_testcase}
             print submission1
-            print "---*---"
             print ""
             
             if on_reject == 'break' and r2.verdict != 'AC':
                 break
+        
+        print "---*---"
+        
         return (self.aggregate_results(subres1),
                 self.aggregate_results(subres2, shadow_result=True))
 
