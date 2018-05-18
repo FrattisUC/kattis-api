@@ -152,12 +152,10 @@ class TestCase(ProblemAspect):
 
     def run_submission(self, sub, args, timelim_low=1000, timelim_high=1000):
         outfile = os.path.join(self._problem.tmpdir, 'output')
-        print ''
         filename = self.strip_path_prefix(self._base).replace("/","-")
-        print filename
         if sys.stdout.isatty():
             msg = 'Running %s on %s...' % (sub, self)
-            sys.stdout.write('%s' % msg)
+            #sys.stdout.write('%s' % msg)
             sys.stdout.flush()
 
         if self._problem.is_interactive:
@@ -189,6 +187,12 @@ class TestCase(ProblemAspect):
             res2.ac_runtime = res2.runtime
             res2.ac_runtime_testcase = res2.runtime_testcase
         self.info('Test file result: %s)' % (res1))
+
+        subResult[id][filename] = {}
+        subResult[id][filename]['verdict'] = res1.verdict
+        subResult[id][filename]['score'] = res1.score
+        subResult[id][filename]['reason'] = res1.reason
+        subResult[id][filename]['runtime'] = res1.runtime
 
         return (res1, res2)
 
@@ -392,19 +396,6 @@ class TestCaseGroup(ProblemAspect):
             (r1, r2) = subdata.run_submission(sub, args, timelim_low, timelim_high)
             subres1.append(r1)
             subres2.append(r2)
-            
-            ''' Aqui se escribe en el archivo'''
-            
-            print ""
-            print subdata.__str__()
-            submission1 = {'test': self._parent, 'verdict': r1.verdict, 'score': r1.score, 'problem': r1.testcase._problem.shortname, 'reason': r1.reason, 'runtime': r1.runtime, 'runtime_testcase': r1.runtime_testcase, 'ac_runtime': r1.ac_runtime, 'ac_runtime_testcase': r1.ac_runtime_testcase}
-            print submission1
-            print ""
-            
-            if on_reject == 'break' and r2.verdict != 'AC':
-                break
-        
-        print "---*---"
         
         return (self.aggregate_results(subres1),
                 self.aggregate_results(subres2, shadow_result=True))
@@ -1124,6 +1115,7 @@ class Submissions(ProblemAspect):
         return result1
 
     def check(self, args):
+
         if self._check_res is not None:
             return self._check_res
         self._check_res = True
@@ -1153,6 +1145,12 @@ class Submissions(ProblemAspect):
 
                     res = self.check_submission(sub, args, acr, timelim, timelim_margin)
                     runtimes.append(res.runtime)
+                    testcase = res.testcase.strip_path_prefix(res.testcase._base).replace('/','-')
+                    subResult[id][testcase] = {}
+                    subResult[id][testcase]['verdict'] = res.verdict
+                    subResult[id][testcase]['score'] = res.score
+                    subResult[id][testcase]['reason'] = res.reason
+                    subResult[id][testcase]['runtime'] = res.runtime
 
             if acr == 'AC':
                 if len(runtimes) > 0:
@@ -1231,10 +1229,12 @@ class Problem(ProblemAspect):
 
             run.limit.check_limit_capabilities(self)
 
+            print args.parts
             for part in args.parts:
                 self.msg('Checking %s' % part)
                 for item in part_mapping[part]:
                     item.check(args)
+            
         except VerifyError:
             pass
         return [ProblemAspect.errors, ProblemAspect.warnings]
@@ -1272,6 +1272,11 @@ def default_args():
 
 
 def main():
+    global subResult
+    global id
+    id = 'someId'
+    subResult = {}
+    subResult[id] = {}
     args = argparser().parse_args()
     fmt = "%(levelname)s %(message)s"
     logging.basicConfig(stream=sys.stdout,
@@ -1280,8 +1285,9 @@ def main():
     print 'Loading problem %s' % os.path.basename(os.path.realpath(args.problemdir))
     with Problem(args.problemdir) as prob:
         [errors, warnings] = prob.check(args)
-        print "%s tested: %d errors, %d warnings" % (prob.shortname, errors, warnings)
-
+        print "%s tested: %d errors, %d warnings\n" % (prob.shortname, errors, warnings)
+    subResult = json.dumps(subResult)
+    print subResult
     sys.exit(1 if errors > 0 else 0)
 
 if __name__ == '__main__':
